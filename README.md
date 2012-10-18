@@ -150,4 +150,4 @@ map for Ind3. In this case
     aa      2       a       1.00
 
 
-Copyright (c) 2012 Pjotr Prins under a BSD license
+Copyright (c) 2012 Pjotr Prins and Artem Tarasov under a BSD license
