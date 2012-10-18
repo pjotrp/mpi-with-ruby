@@ -1,6 +1,8 @@
 mpi-with-ruby
 =============
 
+# Introduction
+
 Super computing tests using openmpi, Ruby and mpi-ruby.
 
 We have three routines:
@@ -19,6 +21,8 @@ The receiver catches the responses and writes a new quality score.
 The reader and responder share 'memory'. For this
 prototype implementation we'll use a simple database. The readers add
 (reliable) SNPs to the table, and the responders read them.
+
+# Install
 
 First install Tokyo Cabinet DB:
 
@@ -58,3 +62,92 @@ Test MPI with Tokyocabinet:
 ```
 
 At this point everything is in place to test our routines.
+
+# Algorithm
+
+## Data generator
+
+The genotypes are generated for 3 individuals by
+
+```sh
+    ruby bin/data-generator.rb 3 
+```
+
+Every file contains the reference with possible SNPs, the haplotype (4
+by default), followed by the SNP of the individual and a probability:
+
+    ==> ind2.tab <==
+    cc      2       c       1.00
+    ac      2       a       0.97
+    gg      2       g       0.38
+    ga      2       a       0.07
+    ga      2       g       0.49
+    ta      2       t       1.00
+    at      2       a       0.56
+    ta      2       a       1.00
+    tc      2       c       1.00
+    ta      2       a       1.00
+
+    ==> ind3.tab <==
+    cc      2       c       0.98
+    ac      2       a       0.45
+    gg      2       g       1.00
+    ga      2       a       1.00
+    ga      2       g       1.00
+    ta      2       t       0.16
+    at      2       a       0.59
+    ta      2       a       1.00
+    tc      2       c       0.27
+    ta      2       a       1.00
+
+So comparing ind2 with ind3, it is easy to see that the 'c' in the
+last 'aca' is probably correct, despite its low probability in ind3.
+Also some of the other SNPs may be correct, depending on the scoring
+algorithm. Note, we simplify the SNP scoring by using a homozygous
+genome. This algorithm is for testing MPI performance only. 
+
+## Reader
+
+Each reader reads one of above ind?.tab files. It broadcasts all
+weaker SNPs together with the strong SNPs. I.e. in above example Ind1 
+will broadcast
+
+    a       0.97
+    g       0.38
+    a       0.07
+    g       0.49
+    t       1.00
+
+and 
+
+    t       1.00
+    a       0.56
+    a       1.00
+
+and
+
+    a       1.00
+    c       0.27
+    a       1.00
+
+for others to respond to.
+
+## Responder
+
+The responder for Ind2 should respond to the last broadcast with
+
+    a       1.00
+    c       1.00
+    a       1.00
+
+## Receiver
+
+The receiver for Ind3 should get the response, and write out the SNP
+map for Ind3. In this case
+
+    aa      2       a       1.00
+    cc      2       c       1.00
+    aa      2       a       1.00
+
+
+Copyright (c) 2012 Pjotr Prins under a BSD license

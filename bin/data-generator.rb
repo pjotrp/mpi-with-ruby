@@ -39,7 +39,7 @@ end
       end
       prob = rand * 2
       prob = 1.0 if prob > 1
-      f.printf "%s\t%s\t%.2f\n",reference[i],haplotypes[h][i],prob
+      f.printf "%s\t%i\t%s\t%.2f\n",reference[i],h,haplotypes[h][i],prob
     end
   end
 end
