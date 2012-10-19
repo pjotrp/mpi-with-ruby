@@ -7,6 +7,8 @@
 require "json"
 
 PROB_THRESHOLD = 0.5
+MPI_ANY_SOURCE = -1  # from /usr/lib/openmpi/include/mpi.h
+MPI_ANY_TAG    = -1  # from /usr/lib/openmpi/include/mpi.h
 
 process_rank = MPI::Comm::WORLD.rank()   # the rank of the MPI process
 num_processes = MPI::Comm::WORLD.size()    # the number of processes
@@ -23,36 +25,47 @@ class Genotype
   end
 end
 
-def broadcast process_rank, start, list, stop
+def broadcast num_processes, process_rank, start, list, stop
   # p [start.nuc,list.map { |g| g.nuc }.join,stop.nuc]
   # Turn message into a string (serialize)
   nucs  = [ start.nuc, list.map { |g| g.nuc }, stop.nuc ]
   probs = [ start.prob, list.map { |g| g.prob }, stop.prob ]
   poss  = [ start.pos, list.map { |g| g.pos }, stop.pos ]
 
-  MPI::Comm::WORLD.bcast([poss,nucs,probs].to_json, process_rank)
+  # MPI::Comm::WORLD.bcast([poss,nucs,probs].to_json, process_rank)
+  (0..num_processes/2-1).each do | p |
+    pnum = p + 4 
+    if pnum != process_rank
+      puts "Sending from #{process_rank} to #{pnum}"
+      # We use a *blocking* send. After completion we can calculate the new probabilities
+      # Non-blocking looks interesting, but actually won't help because we are in a lock-step
+      # scoring process anyway
+      MPI::Comm::WORLD.send([poss,nucs,probs].to_json, pnum, process_rank) 
+      sleep 0.1
+    end
+  end
 end
 
 # ---- Read ind file
 filen="test/data/ind#{process_rank+1}.tab"
-segment = []
+genome = []
 pos = 0
 File.open(filen).each_line do | line |
   fields = line.split(/\t/)
   nucleotide = fields[2]
   prob = fields[3].to_f
   g = Genotype.new(pos, fields[2], fields[3].to_f)
-  segment << g
+  genome << g
   pos += 1
 end
 
-# ---- Split segment on high scores, so we get a list of High - low+ - High. Broadcast
-#      each such segment - sorry for the iterative approach
+# ---- Split genome on high scores, so we get a list of High - low+ - High. Broadcast
+#      each such genome - sorry for the iterative approach
 
 start = nil
 list  = []
 stop  = nil
-segment.each_with_index do | g, i |
+genome.each_with_index do | g, i |
   $stderr.print "." if i % 100 == 0
   next if g.nuc == 'x'  # note that not all nuc positions will be added
   if g.prob > PROB_THRESHOLD
@@ -60,7 +73,7 @@ segment.each_with_index do | g, i |
     if start and list.size > 0
       # We have a list of SNPs!
       stop = g
-      broadcast(process_rank,start,list,stop) if list.size < 4  # ignore highly variable regions
+      broadcast(num_processes,process_rank,start,list,stop) if list.size < 4  # ignore highly variable regions
       # restart search
       stop = start
       list = []
@@ -74,6 +87,8 @@ segment.each_with_index do | g, i |
       list << g
     end
   end
+  # Here we process the 'responder' in a separate 'thread'
+  # handle_responder(process_rank,genome)
 end
 
 if process_rank == 0
