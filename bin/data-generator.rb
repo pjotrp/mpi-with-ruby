@@ -1,6 +1,6 @@
 # Generate input file - and you can set the speed the file gets written
 
-TIME_PER_LINE=0.1
+TIME_PER_LINE=0.01
 SIZE=10_000          
 HAPLOTYPES = 4 
 MUTATION_RATE = 200  # 1 in 200
@@ -55,7 +55,7 @@ end
 
     f1.printf "%s\t%i\t%s\t%.2f\n",reference[j].join,h[i],haplotypes[h1][j],prob
     f1.flush
-    sleep TIME_PER_LINE
   end
+  sleep TIME_PER_LINE
 end
 print "\nDone\n"
