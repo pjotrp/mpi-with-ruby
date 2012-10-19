@@ -28,8 +28,10 @@ haplotypes = []
   end
 end
 
+Dir.mkdir("test/data") if !File.exist?("test/data")
+
 (1..individuals).each do | i |
-  fn = "ind#{i}.tab"
+  fn = "./test/data/ind#{i}.tab"
   print "\nWriting #{fn}..."
   File.open(fn,"w") do | f |
     h = 0
@@ -39,7 +41,8 @@ end
       end
       prob = rand * 2
       prob = 1.0 if prob > 1
-      f.printf "%s\t%i\t%s\t%.2f\n",reference[i],h,haplotypes[h][i],prob
+      f.printf "%s\t%i\t%s\t%.2f\n",reference[i].join,h,haplotypes[h][i],prob
     end
   end
 end
+print "\nDone\n"

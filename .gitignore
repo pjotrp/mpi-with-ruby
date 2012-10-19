@@ -19,5 +19,6 @@ doc/
 
 # Other
 contrib/
+test/data/
 *.tch
 *.tab
