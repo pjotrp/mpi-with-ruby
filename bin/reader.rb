@@ -41,7 +41,7 @@ def broadcast num_processes, process_rank, start, list, stop
       # Non-blocking looks interesting, but actually won't help because we are in a lock-step
       # scoring process anyway
       MPI::Comm::WORLD.send([poss,nucs,probs].to_json, pnum, process_rank) 
-      sleep 0.002  # some expensive statistic
+      sleep 0.005  # some expensive statistic - so the responder has time to process the queue
     end
   end
 end
