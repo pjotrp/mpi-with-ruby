@@ -25,7 +25,7 @@ class Genotype
   end
 end
 
-def broadcast num_processes, process_rank, start, list, stop
+def broadcast_for_haplotype num_processes, process_rank, start, list, stop
   # p [start.nuc,list.map { |g| g.nuc }.join,stop.nuc]
   # Turn message into a string (serialize)
   nucs  = [ start.nuc, list.map { |g| g.nuc }, stop.nuc ]
@@ -43,8 +43,13 @@ def broadcast num_processes, process_rank, start, list, stop
       MPI::Comm::WORLD.send([poss,nucs,probs].to_json, pnum, process_rank) 
       # $stderr.print "Waiting for #{pnum}"
       msg,status = MPI::Comm::WORLD.recv(pnum,process_rank)
+      if msg == "MATCH!"
+        # Another haplotype matches our SNPs
+        return true
+      end
     end
   end
+  false
 end
 
 # ---- Read ind file
@@ -60,9 +65,11 @@ File.open(filen).each_line do | line |
   pos += 1
 end
 
+
 # ---- Split genome on high scores, so we get a list of High - low+ - High. Broadcast
 #      each such genome - sorry for the iterative approach
 
+outf = File.open("snp#{process_rank+1}.tab","w")
 start = nil
 list  = []
 stop  = nil
@@ -74,9 +81,16 @@ genome.each_with_index do | g, i |
     if start and list.size > 0
       # We have a list of SNPs!
       stop = g
-      broadcast(num_processes,process_rank,start,list,stop) if list.size < 4  # ignore highly variable regions
-      # restart search
-      stop = start
+      result = broadcast_for_haplotype(num_processes,process_rank,start,list,stop) if list.size < 4  # ignore highly variable regions
+      # write SNPs to output file
+      outf.print start.pos,"\t",start.nuc,"\n"
+      if result == true
+        list.each do | g |
+          outf.print g.pos,"\t",g.nuc,"\n"
+        end
+      end
+      # restart search from the next probable SNP
+      start = stop
       list = []
       stop = nil
     else
