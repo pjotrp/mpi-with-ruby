@@ -36,12 +36,12 @@ def broadcast num_processes, process_rank, start, list, stop
   (0..num_processes/2-1).each do | p |
     pnum = p + 4 
     if pnum != process_rank
-      puts "Sending from #{process_rank} to #{pnum}"
+      puts "Sending #{start.pos} from #{process_rank} to #{pnum}"
       # We use a *blocking* send. After completion we can calculate the new probabilities
       # Non-blocking looks interesting, but actually won't help because we are in a lock-step
       # scoring process anyway
       MPI::Comm::WORLD.send([poss,nucs,probs].to_json, pnum, process_rank) 
-      sleep 0.1
+      sleep 0.002  # some expensive statistic
     end
   end
 end
@@ -91,7 +91,11 @@ genome.each_with_index do | g, i |
   # handle_responder(process_rank,genome)
 end
 
-if process_rank == 0
-  endwtime = MPI.wtime()
-  puts "wallclock time = #{endwtime-startwtime}"
-end
+sleep 2 # wait for queue purge and stop responders
+
+MPI::Comm::WORLD.send("QUIT", process_rank+4, process_rank) 
+
+endwtime = MPI.wtime()
+$stderr.print "\nwallclock time of #{process_rank} = #{endwtime-startwtime}\n"
+
+
