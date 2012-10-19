@@ -1,5 +1,6 @@
-# Generate input file
+# Generate input file - and you can set the speed the file gets written
 
+TIME_PER_LINE=0.1
 SIZE=10_000          
 HAPLOTYPES = 4 
 MUTATION_RATE = 200  # 1 in 200
@@ -19,31 +20,42 @@ end
 haplotypes = []
 (0..HAPLOTYPES-1).each do | h |
   haplotypes[h] = []
-  (0..SIZE-1).each do | i |
+  (0..SIZE-1).each do | j |
     if rand(MUTATION_RATE) == 1
       haplotypes[h] << 'x'
     else
-      haplotypes[h] << reference[i][rand(2)]
+      haplotypes[h] << reference[j][rand(2)]
     end
   end
 end
 
 Dir.mkdir("test/data") if !File.exist?("test/data")
 
-(1..individuals).each do | i |
-  fn = "./test/data/ind#{i}.tab"
+f = []
+h = []
+(0..individuals-1).each do | i |
+  fn = "./test/data/ind#{i+1}.tab"
   print "\nWriting #{fn}..."
-  File.open(fn,"w") do | f |
-    h = rand(HAPLOTYPES)          # start with any haplotype
-    (0..SIZE-1).each do | i |
-      if rand(300) == 100          # switch haplotype on average every 300 bp
-        h = rand(HAPLOTYPES)      
-      end
-      # Calculate a probability for the nucleotide
-      prob = rand * 2 
-      prob = 1.0 if prob > 1      
-      f.printf "%s\t%i\t%s\t%.2f\n",reference[i].join,h,haplotypes[h][i],prob
+  f[i] = File.open(fn,"w")
+  h[i] = rand(HAPLOTYPES)          # start with any haplotype
+end
+
+(0..SIZE-1).each do | j |
+  (0..individuals-1).each do | i |
+    f1 = f[i]
+    if rand(300) == 100          # switch haplotype on average every 300 bp
+      h[i] = rand(HAPLOTYPES)      
     end
+    h1 = h[i]
+    # Calculate a probability for the nucleotide
+    prob = rand * 2 
+    prob = 1.0 if prob > 1
+    # p reference[j],h[i] ,prob
+    # p haplotypes[h1][i]
+
+    f1.printf "%s\t%i\t%s\t%.2f\n",reference[j].join,h[i],haplotypes[h1][j],prob
+    f1.flush
+    sleep TIME_PER_LINE
   end
 end
 print "\nDone\n"

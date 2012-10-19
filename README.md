@@ -20,16 +20,10 @@ The receiver catches the responses and writes a new quality score.
 
 The reader and responder share 'memory'. For this
 prototype implementation we'll use a simple database. The readers add
-(reliable) SNPs to the table, and the responders read them.
+(reliable) SNPs to the table, and the responders read them. The table
+is a simple (growing) file.
 
 # Install
-
-First install Tokyo Cabinet DB:
-
-```sh
-    apt-get install libtokyocabinet-dev
-    gem install tokyocabinet
-```
 
 Also install mpi-ruby 
 
@@ -151,6 +145,16 @@ map for Ind3. In this case
 
 Here we combined the receiver in the reader - this is possible since
 we use send and receive pairs, and keep the scoring in lock step.
+
+# Notes
+
+We may write a version that uses Tokyo Cabinet DB:
+
+```sh
+    apt-get install libtokyocabinet-dev
+    gem install tokyocabinet
+```
+
 
 
 Copyright (c) 2012 Pjotr Prins and Artem Tarasov under a BSD license
