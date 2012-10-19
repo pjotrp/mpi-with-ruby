@@ -7,6 +7,8 @@ MPI_ANY_TAG    = -1  # from /usr/lib/openmpi/include/mpi.h
 process_rank = MPI::Comm::WORLD.rank()   # the rank of the MPI process
 num_processes = MPI::Comm::WORLD.size()    # the number of processes
 
+individual = process_rank - 4
+
 class Genotype
   attr_reader :pos, :nuc, :prob
   def initialize pos, nuc, prob
@@ -45,7 +47,7 @@ def handle_responder process_rank, genome
       start_prob, list_prob, end_prob = probs
       # Do we have matching sequence?
       seq = genome[start_pos..end_pos]
-      p [ seq.map{ |g| g.nuc }, start, stop ]
+      # p [ seq.map{ |g| g.nuc }, start, stop ]
       if seq.first.nuc == start and seq.last.nuc == stop and seq.first.prob > PROB_THRESHOLD and seq.last.prob > PROB_THRESHOLD
         $stderr.print "\nWe may have a match for #{pnum} from #{process_rank}!"
         middle_seq = seq[1..-2]
