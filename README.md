@@ -149,5 +149,8 @@ map for Ind3. In this case
     cc      2       c       1.00
     aa      2       a       1.00
 
+Here we combined the receiver in the reader - this is possible since
+we use send and receive pairs, and keep the scoring in lock step.
+
 
 Copyright (c) 2012 Pjotr Prins and Artem Tarasov under a BSD license

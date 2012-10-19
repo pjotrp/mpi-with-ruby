@@ -32,6 +32,7 @@ def handle_responder process_rank, genome
   have_message,req = MPI::Comm::WORLD.iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG)
   if have_message
     msg,status = MPI::Comm::WORLD.recv(MPI_ANY_SOURCE,MPI_ANY_TAG)
+    pnum = status.source
     # $stderr.print msg
     if msg == "QUIT"
       $stderr.print "\nExiting #{process_rank}"
@@ -46,13 +47,21 @@ def handle_responder process_rank, genome
       seq = genome[start_pos..end_pos]
       p [ seq.map{ |g| g.nuc }, start, stop ]
       if seq.first.nuc == start and seq.last.nuc == stop and seq.first.prob > PROB_THRESHOLD and seq.last.prob > PROB_THRESHOLD
-        $stderr.print "\nWe may have a match!"
+        $stderr.print "\nWe may have a match for #{pnum} from #{process_rank}!"
         middle_seq = seq[1..-2]
         middle_seq.each_with_index do | g, i |
-          return if g.nuc != list[i] or g.prob < PROB_THRESHOLD
+          if g.nuc != list[i] or g.prob < PROB_THRESHOLD
+            # $stderr.print "\nWe have NO match!"
+            MPI::Comm::WORLD.send("NOMATCH!", pnum, pnum) 
+            return
+          end
         end
         $stderr.print "\nWe have a match!"
+        MPI::Comm::WORLD.send("MATCH!", pnum, pnum) 
+        return
       end
+      # $stderr.print "\nWe have NO match for #{pnum} from #{process_rank}!"
+      MPI::Comm::WORLD.send("NOMATCH!", pnum, pnum) 
     end
     $stderr.print "^"
   end
