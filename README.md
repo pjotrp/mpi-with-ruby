@@ -7,21 +7,24 @@ Super computing tests using openmpi, Ruby and mpi-ruby.
 
 We have three routines:
 
-1. Reader: read, score and broadcast
-2. Responder: responds to the broadcast
-3. Receiver: receive and write
+1. Data generator: Timed generation of data (sambamba simulation)
+2. Scorer: read data, score and haplotype broadcast, receive and write
+3. Responder: read data, score strong SNPs only, and respond to haplotype broadcast
+
+Serially:
 
 The reader reads a file of location quality scores, and broadcasts possible
-combinations of SNPs. Multiple readers are running at the same time.
+combinations of SNPs.
 
-The responder responds to the broadcast when a match exists already.
+The haplotype responder responds to the broadcast when a match exists.
 
 The receiver catches the responses and writes a new quality score.
 
-The reader and responder share 'memory'. For this
-prototype implementation we'll use a simple database. The readers add
-(reliable) SNPs to the table, and the responders read them. The table
-is a simple (growing) file.
+Basically the reader scores SNPs for one individual. The Responder
+responds to queries by other individuals.
+
+The scorer and responder share 'memory' - that is the data file.  The
+table is a simple (growing) file.
 
 # Install
 
