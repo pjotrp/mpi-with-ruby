@@ -34,13 +34,14 @@ Dir.mkdir("test/data") if !File.exist?("test/data")
   fn = "./test/data/ind#{i}.tab"
   print "\nWriting #{fn}..."
   File.open(fn,"w") do | f |
-    h = 0
+    h = rand(HAPLOTYPES)          # start with any haplotype
     (0..SIZE-1).each do | i |
-      if i % 300 == 0   
-        h = rand(HAPLOTYPES)
+      if rand(300) == 100          # switch haplotype on average every 300 bp
+        h = rand(HAPLOTYPES)      
       end
-      prob = rand * 2
-      prob = 1.0 if prob > 1
+      # Calculate a probability for the nucleotide
+      prob = rand * 2 
+      prob = 1.0 if prob > 1      
       f.printf "%s\t%i\t%s\t%.2f\n",reference[i].join,h,haplotypes[h][i],prob
     end
   end

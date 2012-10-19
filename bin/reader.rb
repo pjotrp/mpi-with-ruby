@@ -1,5 +1,82 @@
 # Reader reads data from a file and stores strong SNPs in shared space (Tokyocabinet)
+#
+# You'll need JSON. Run it with
+#
+# time env LD_LIBRARY_PATH=~/.rvm/rubies/ruby-1.8.7-p352/lib/ mpiexec -np 4 contrib/mpi-ruby/src/mpi_ruby -I /home/wrk/.rvm/gems/ruby-1.8.7-p352/gems/json-1.7.5/lib/ bin/reader.rb
 
-ARGF.each do | line |
-  p line
+require "json"
+
+PROB_THRESHOLD = 0.5
+
+process_rank = MPI::Comm::WORLD.rank()   # the rank of the MPI process
+num_processes = MPI::Comm::WORLD.size()    # the number of processes
+
+process_rank = 0 if process_rank == nil
+startwtime = MPI.wtime()
+
+print "Rank #{process_rank} out of #{num_processes} processes\n"
+
+class Genotype
+  attr_reader :pos, :nuc, :prob
+  def initialize pos, nuc, prob
+    @pos = pos ; @nuc = nuc ; @prob = prob
+  end
+end
+
+def broadcast process_rank, start, list, stop
+  # p [start.nuc,list.map { |g| g.nuc }.join,stop.nuc]
+  # Turn message into a string (serialize)
+  nucs  = [ start.nuc, list.map { |g| g.nuc }, stop.nuc ]
+  probs = [ start.prob, list.map { |g| g.prob }, stop.prob ]
+  poss  = [ start.pos, list.map { |g| g.pos }, stop.pos ]
+
+  MPI::Comm::WORLD.bcast([poss,nucs,probs].to_json, process_rank)
+end
+
+# ---- Read ind file
+filen="test/data/ind#{process_rank+1}.tab"
+segment = []
+pos = 0
+File.open(filen).each_line do | line |
+  fields = line.split(/\t/)
+  nucleotide = fields[2]
+  prob = fields[3].to_f
+  g = Genotype.new(pos, fields[2], fields[3].to_f)
+  segment << g
+  pos += 1
+end
+
+# ---- Split segment on high scores, so we get a list of High - low+ - High. Broadcast
+#      each such segment - sorry for the iterative approach
+
+start = nil
+list  = []
+stop  = nil
+segment.each_with_index do | g, i |
+  $stderr.print "." if i % 100 == 0
+  next if g.nuc == 'x'  # note that not all nuc positions will be added
+  if g.prob > PROB_THRESHOLD
+    # High prob SNP
+    if start and list.size > 0
+      # We have a list of SNPs!
+      stop = g
+      broadcast(process_rank,start,list,stop) if list.size < 4  # ignore highly variable regions
+      # restart search
+      stop = start
+      list = []
+      stop = nil
+    else
+      start = g
+    end
+  else
+    # Low prob SNP
+    if start
+      list << g
+    end
+  end
+end
+
+if process_rank == 0
+  endwtime = MPI.wtime()
+  puts "wallclock time = #{endwtime-startwtime}"
 end
