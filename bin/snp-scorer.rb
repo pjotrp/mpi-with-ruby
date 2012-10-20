@@ -18,11 +18,12 @@ MPI_ANY_TAG    = -1  # from /usr/lib/openmpi/include/mpi.h
 
 pid = MPI::Comm::WORLD.rank()   # the rank of the MPI process
 num_processes = MPI::Comm::WORLD.size()    # the number of processes
+individual = pid+1
 
 pid = 0 if pid == nil
 startwtime = MPI.wtime()
 
-filen="test/data/ind#{pid+1}.tab"
+filen="test/data/ind#{individual}.tab"
 print "Rank #{pid} out of #{num_processes} processes (#{filen})\n"
 
 def broadcast_for_haplotype num_processes, pid, start, list, stop

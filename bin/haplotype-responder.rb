@@ -5,15 +5,17 @@ require "parseline"
 
 DO_SPLIT = true
 PROB_THRESHOLD = 0.5
+PROCESSES = 4
 MPI_ANY_SOURCE = -1  # from /usr/lib/openmpi/include/mpi.h
 MPI_ANY_TAG    = -1  # from /usr/lib/openmpi/include/mpi.h
 
 pid = MPI::Comm::WORLD.rank()              # the rank of the MPI process
 num_processes = MPI::Comm::WORLD.size()    # the number of processes
 
+individual = pid+1-PROCESSES
 
 # ---- Read ind file
-filen="test/data/ind#{pid-4+1}.tab"
+filen="test/data/ind#{individual}.tab"
 print "Rank #{pid} out of #{num_processes} processes (responder #{filen})\n"
 genome = []
 f = File.open(filen)
