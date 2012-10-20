@@ -8,8 +8,10 @@ $: << "./lib"
 
 require "json"
 require "parseline"
+require "genome_section"
 
-DO_SPLIT = false
+DO_SPLIT = true
+SPLIT_SIZE = 300
 PROB_THRESHOLD = 0.5
 MPI_ANY_SOURCE = -1  # from /usr/lib/openmpi/include/mpi.h
 MPI_ANY_TAG    = -1  # from /usr/lib/openmpi/include/mpi.h
@@ -52,25 +54,12 @@ end
 filen="test/data/ind#{pid+1}.tab"
 f = File.open(filen)
 
-# Split the genome into smaller sections
-def each_genome_section f
-  section = []
-  ParseLine::tail_each_genotype(f) do | g |
-    section << g
-    if DO_SPLIT and section.size > 100 and g.prob > PROB_THRESHOLD
-      yield section
-      section = [section.last]
-    end
-  end
-  yield section
-end
-
 # ---- Split genome on high scores, so we get a list of High - low+ - High. Broadcast
 #      each such genome - sorry for the iterative approach
 
 outf = File.open("snp#{pid+1}.tab","w")
 
-each_genome_section(f) do | genome_section |
+GenomeSection::each(f,DO_SPLIT,SPLIT_SIZE,PROB_THRESHOLD) do | genome_section |
   start = nil
   list  = []
   stop  = nil
