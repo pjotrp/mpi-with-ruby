@@ -1,14 +1,13 @@
 # Read a growing file
 #
 
+$: << './lib'
+
+require 'filereader'
+
 File.open(ARGV[0]) do | f |
-  while true
-    select([f]) 
-    s = f.gets 
-    if s != nil
-      print s 
-      break if s.strip == "End"
-    end
+  FileReader::tail_each_line(f) do |line|
+    print line
   end
 end
 $stderr.print "Done reading!\n"

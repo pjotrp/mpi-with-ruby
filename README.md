@@ -33,6 +33,8 @@ table is a simple (growing) file.
 * Scoring in the haplotype responder
 * Test MPI performance
 * Measure and speed up textual (un)marshalling, probably a bottle neck (currently using JSON)
+* If MPI itself is a bottle neck, combine messages into larger messages
+* Correct MPI finalize
 
 # Install
 
@@ -79,7 +81,7 @@ The genotypes are generated for 3 individuals by
 ```
 
 Every file contains the reference with possible SNPs, the haplotype (4
-by default), followed by the SNP of the individual and a probability:
+types by default), followed by the SNP of the individual and a probability:
 
     ==> ind2.tab <==
     cc      2       c       1.00
@@ -105,6 +107,7 @@ by default), followed by the SNP of the individual and a probability:
     tc      2       c       0.27
     ta      2       a       1.00
 
+This section has the same haplotype.
 So comparing ind2 with ind3, it is easy to see that the 'c' in the
 last 'aca' is probably correct, despite its low probability in ind3.
 Also some of the other SNPs may be correct, depending on the scoring
@@ -159,13 +162,20 @@ we use send and receive pairs, and keep the scoring in lock step.
 
 # Notes
 
-We may write a version that uses Tokyo Cabinet DB:
+## MPI spinning
+
+Use mpiexec with '-mca yield_when_idle 1'.
+  
+    echo "1" >/proc/sys/kernel/sched_compat_yield
+
+## Using a DB
+
+At the moment we are following a growing SNP file, as it is generated
+by Sambamba.  We may write a version that uses Tokyo Cabinet DB:
 
 ```sh
     apt-get install libtokyocabinet-dev
     gem install tokyocabinet
 ```
-
-
 
 Copyright (c) 2012 Pjotr Prins and Artem Tarasov under a BSD license

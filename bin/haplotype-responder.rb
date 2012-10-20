@@ -7,6 +7,8 @@ MPI_ANY_TAG    = -1  # from /usr/lib/openmpi/include/mpi.h
 process_rank = MPI::Comm::WORLD.rank()   # the rank of the MPI process
 num_processes = MPI::Comm::WORLD.size()    # the number of processes
 
+print "Rank #{process_rank} out of #{num_processes} processes (responder)\n"
+
 individual = process_rank - 4
 
 class Genotype

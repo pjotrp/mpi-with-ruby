@@ -32,7 +32,6 @@ def broadcast_for_haplotype num_processes, process_rank, start, list, stop
   probs = [ start.prob, list.map { |g| g.prob }, stop.prob ]
   poss  = [ start.pos, list.map { |g| g.pos }, stop.pos ]
 
-  # MPI::Comm::WORLD.bcast([poss,nucs,probs].to_json, process_rank)
   (0..num_processes/2-1).each do | p |
     pnum = p + 4 
     if pnum != process_rank
@@ -61,6 +60,7 @@ File.open(filen).each_line do | line |
   nucleotide = fields[2]
   prob = fields[3].to_f
   g = Genotype.new(pos, fields[2], fields[3].to_f)
+  p g
   genome << g
   pos += 1
 end

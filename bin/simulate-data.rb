@@ -50,8 +50,6 @@ end
     # Calculate a probability for the nucleotide
     prob = rand * 2 
     prob = 1.0 if prob > 1
-    # p reference[j],h[i] ,prob
-    # p haplotypes[h1][i]
 
     f1.printf "%i\t%s\t%i\t%s\t%.2f\n",j,reference[j].join,h[i],haplotypes[h1][j],prob
     f1.flush
