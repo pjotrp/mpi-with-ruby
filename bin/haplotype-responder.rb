@@ -3,28 +3,24 @@ $: << './lib'
 require "json"
 require "parseline"
 
+DO_SPLIT = true
 PROB_THRESHOLD = 0.5
 MPI_ANY_SOURCE = -1  # from /usr/lib/openmpi/include/mpi.h
 MPI_ANY_TAG    = -1  # from /usr/lib/openmpi/include/mpi.h
 
-pid = MPI::Comm::WORLD.rank()   # the rank of the MPI process
+pid = MPI::Comm::WORLD.rank()              # the rank of the MPI process
 num_processes = MPI::Comm::WORLD.size()    # the number of processes
 
-print "Rank #{pid} out of #{num_processes} processes (responder)\n"
-
-individual = pid - 4
 
 # ---- Read ind file
-filen="test/data/ind#{pid+1}.tab"
+filen="test/data/ind#{pid-4+1}.tab"
+print "Rank #{pid} out of #{num_processes} processes (responder #{filen})\n"
 genome = []
 f = File.open(filen)
-ParseLine::tail_each_genotype(f) do | g |
-  genome << g
-end
-
+$genome = []  # global cache
 
 # The responder acts 'independently', receiving messages and responding to queries
-def handle_responder pid, genome
+def handle_responder pid,f
   have_message,req = MPI::Comm::WORLD.iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG)
   if have_message
     msg,status = MPI::Comm::WORLD.recv(MPI_ANY_SOURCE,MPI_ANY_TAG)
@@ -40,7 +36,14 @@ def handle_responder pid, genome
       start, list, stop = list1
       start_prob, list_prob, end_prob = probs
       # Do we have matching sequence?
-      seq = genome[start_pos..end_pos]
+      # First make sure the reader has gotten to this point... FIXME - this stops all
+      if end_pos > $genome.size-1
+        ParseLine::tail_each_genotype(f) do | g |
+          $genome << g
+          break if DO_SPLIT and end_pos <= $genome.size-1
+        end
+      end
+      seq = $genome[start_pos..end_pos]
       # p [ seq.map{ |g| g.nuc }, start, stop ]
       if seq.first.nuc == start and seq.last.nuc == stop and seq.first.prob > PROB_THRESHOLD and seq.last.prob > PROB_THRESHOLD
         $stderr.print "\nWe may have a match for #{source_pid} from #{pid}!"
@@ -67,6 +70,6 @@ def handle_responder pid, genome
 end
 
 while true
-  handle_responder(pid,genome)
+  handle_responder(pid,f)
 end
 

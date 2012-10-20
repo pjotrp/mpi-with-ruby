@@ -22,7 +22,8 @@ num_processes = MPI::Comm::WORLD.size()    # the number of processes
 pid = 0 if pid == nil
 startwtime = MPI.wtime()
 
-print "Rank #{pid} out of #{num_processes} processes\n"
+filen="test/data/ind#{pid+1}.tab"
+print "Rank #{pid} out of #{num_processes} processes (#{filen})\n"
 
 def broadcast_for_haplotype num_processes, pid, start, list, stop
   # p [start.nuc,list.map { |g| g.nuc }.join,stop.nuc]
@@ -51,7 +52,6 @@ def broadcast_for_haplotype num_processes, pid, start, list, stop
 end
 
 # ---- Read ind file
-filen="test/data/ind#{pid+1}.tab"
 f = File.open(filen)
 
 # ---- Split genome on high scores, so we get a list of High - low+ - High. Broadcast
