@@ -1,7 +1,7 @@
 # Generate input file - and you can set the speed the file gets written
 
 TIME_PER_LINE=0.001
-SIZE=10_000          
+SIZE=1_000          
 HAPLOTYPES = 4 
 MUTATION_RATE = 200  # 1 in 200
 NUCLEOTIDES = "a g c t".split
