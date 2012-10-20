@@ -3,16 +3,16 @@ $: << './lib'
 require "json"
 require "parseline"
 
+INDIVIDUALS = 4
 DO_SPLIT = true
 PROB_THRESHOLD = 0.5
-PROCESSES = 4
 MPI_ANY_SOURCE = -1  # from /usr/lib/openmpi/include/mpi.h
 MPI_ANY_TAG    = -1  # from /usr/lib/openmpi/include/mpi.h
 
 pid = MPI::Comm::WORLD.rank()              # the rank of the MPI process
 num_processes = MPI::Comm::WORLD.size()    # the number of processes
 
-individual = pid+1-PROCESSES
+individual = pid+1-INDIVIDUALS
 
 # ---- Read ind file
 filen="test/data/ind#{individual}.tab"
