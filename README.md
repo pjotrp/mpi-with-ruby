@@ -29,6 +29,7 @@ table is a simple (growing) file.
 # TODO
 
 * Do not respond to all messages
+* Read files on the fly
 * Check for sambamba to write file on the fly
 * Use Kernel::select for readers (done)
 * Add regression tests (done)

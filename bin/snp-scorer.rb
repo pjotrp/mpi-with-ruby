@@ -9,6 +9,7 @@ $: << "./lib"
 require "json"
 require "parseline"
 
+DO_SPLIT = false
 PROB_THRESHOLD = 0.5
 MPI_ANY_SOURCE = -1  # from /usr/lib/openmpi/include/mpi.h
 MPI_ANY_TAG    = -1  # from /usr/lib/openmpi/include/mpi.h
@@ -49,50 +50,60 @@ end
 
 # ---- Read ind file
 filen="test/data/ind#{pid+1}.tab"
-genome = []
 f = File.open(filen)
-ParseLine::tail_each_genotype(f) do | g |
-  genome << g
+
+# Split the genome into smaller sections
+def each_genome_section f
+  section = []
+  ParseLine::tail_each_genotype(f) do | g |
+    section << g
+    if DO_SPLIT and section.size > 100 and g.prob > PROB_THRESHOLD
+      yield section
+      section = [section.last]
+    end
+  end
+  yield section
 end
 
 # ---- Split genome on high scores, so we get a list of High - low+ - High. Broadcast
 #      each such genome - sorry for the iterative approach
 
 outf = File.open("snp#{pid+1}.tab","w")
-start = nil
-list  = []
-stop  = nil
-genome.each_with_index do | g, i |
-  $stderr.print "." if i % 100 == 0
-  next if g.nuc == 'x'  # note that not all nuc positions will be added
-  if g.prob > PROB_THRESHOLD
-    # High prob SNP
-    if start and list.size > 0
-      # We have a list of SNPs!
-      stop = g
-      result = broadcast_for_haplotype(num_processes,pid,start,list,stop) if list.size < 4  # ignore highly variable regions
-      # write SNPs to output file
-      outf.print start.pos,"\t",start.nuc,"\n"
-      if result == true
-        list.each do | g |
-          outf.print g.pos,"\t",g.nuc,"\n"
+
+each_genome_section(f) do | genome_section |
+  start = nil
+  list  = []
+  stop  = nil
+  genome_section.each do | g |
+    # $stderr.print "." if i % 100 == 0
+    next if g.nuc == 'x'  # note that not all nuc positions will be added
+    if g.prob > PROB_THRESHOLD
+      # High prob SNP
+      if start and list.size > 0
+        # We have a list of SNPs!
+        stop = g
+        result = broadcast_for_haplotype(num_processes,pid,start,list,stop) if list.size < 4  # ignore highly variable regions
+        # write SNPs to output file
+        outf.print start.pos,"\t",start.nuc,"\n"
+        if result == true
+          list.each do | g |
+            outf.print g.pos,"\t",g.nuc,"\n"
+          end
         end
+        # restart search from the next probable SNP
+        start = stop
+        list = []
+        stop = nil
+      else
+        start = g
       end
-      # restart search from the next probable SNP
-      start = stop
-      list = []
-      stop = nil
     else
-      start = g
-    end
-  else
-    # Low prob SNP
-    if start
-      list << g
+      # Low prob SNP
+      if start
+        list << g
+      end
     end
   end
-  # Here we process the 'responder' in a separate 'thread'
-  # handle_responder(pid,genome)
 end
 
 sleep 1 # wait for queue purge and stop responders

@@ -14,7 +14,7 @@ module FileReader
       else
         # We are moving too fast
         $stderr.print "reader pause"
-        sleep 0.001
+        sleep 0.01
       end
     end
   end
