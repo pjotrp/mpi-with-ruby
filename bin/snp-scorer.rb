@@ -27,27 +27,28 @@ startwtime = MPI.wtime()
 filen="test/data/ind#{individual}.tab"
 print "Rank #{pid} out of #{num_processes} processes (#{filen})\n"
 
-def broadcast_for_haplotype num_processes, pid, start, list, stop
+$destinations = (0..individuals-1).to_a.sort{ rand() - 0.5 } - [pid]
+
+def broadcast_for_haplotype num_processes, pid, individuals, individual, start, list, stop
   # p [start.nuc,list.map { |g| g.nuc }.join,stop.nuc]
   # Turn message into a string (serialize)
   nucs  = [ start.nuc, list.map { |g| g.nuc }, stop.nuc ]
   probs = [ start.prob, list.map { |g| g.prob }, stop.prob ]
   poss  = [ start.pos, list.map { |g| g.pos }, stop.pos ]
 
-  (0..num_processes/2-1).each do | p |
-    dest_pid = p + 4 
-    if dest_pid != pid
-      puts "Sending #{start.pos} from #{pid} to #{dest_pid}"
-      # We use a *blocking* send. After completion we can calculate the new probabilities
-      # Non-blocking looks interesting, but actually won't help because we are in a lock-step
-      # scoring process anyway
-      MPI::Comm::WORLD.send([poss,nucs,probs].to_json, dest_pid, pid) 
-      # $stderr.print "Waiting for #{dest_pid}"
-      msg,status = MPI::Comm::WORLD.recv(dest_pid,pid)
-      if msg == "MATCH!"
-        # Another haplotype matches our SNPs
-        return true
-      end
+  $destinations.each do | p |
+    dest_pid = p + individuals
+    puts "Sending pos #{start.pos} from #{pid} to #{dest_pid} (tag #{individual})"
+    # We use a *blocking* send. After completion we can calculate the new probabilities
+    # Non-blocking looks interesting, but actually won't help because we are in a lock-step
+    # scoring process anyway
+    MPI::Comm::WORLD.send([poss,nucs,probs].to_json, dest_pid, individual) 
+    puts "Waiting pid #{pid} for #{dest_pid} (tag #{individual})"
+    msg,status = MPI::Comm::WORLD.recv(dest_pid, individual)
+    puts "Received by pid #{pid} from #{dest_pid} (tag #{individual})"
+    if msg == "MATCH!"
+      # Another haplotype matches our SNPs
+      return true
     end
   end
   false
@@ -73,7 +74,7 @@ GenomeSection::each(f,DO_SPLIT,SPLIT_SIZE,PROB_THRESHOLD) do | genome_section |
       if start and list.size > 0
         # We have a list of SNPs!
         stop = g
-        result = broadcast_for_haplotype(num_processes,pid,start,list,stop) if list.size < 4  # ignore highly variable regions
+        result = broadcast_for_haplotype(num_processes,pid,individuals,individual,start,list,stop) if list.size < 4  # ignore highly variable regions
         # write SNPs to output file
         outf.print start.pos,"\t",start.nuc,"\n"
         if result == true

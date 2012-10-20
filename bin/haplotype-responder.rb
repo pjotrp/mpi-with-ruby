@@ -12,7 +12,7 @@ pid = MPI::Comm::WORLD.rank()              # the rank of the MPI process
 num_processes = MPI::Comm::WORLD.size()    # the number of processes
 individuals = num_processes/2
 
-individual = pid+1-individuals
+individual = pid+1-individuals             # counting individuals from 1
 
 # ---- Read ind file
 filen="test/data/ind#{individual}.tab"
@@ -22,11 +22,12 @@ f = File.open(filen)
 $genome = []  # global cache
 
 # The responder acts 'independently', receiving messages and responding to queries
-def handle_responder pid,f
+def handle_responder pid,f,individual
   have_message,req = MPI::Comm::WORLD.iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG)
   if have_message
-    msg,status = MPI::Comm::WORLD.recv(MPI_ANY_SOURCE,MPI_ANY_TAG)
+    msg,status = MPI::Comm::WORLD.recv(MPI_ANY_SOURCE, MPI_ANY_TAG)
     source_pid = status.source
+    tag = status.tag
     # $stderr.print msg
     if msg == "QUIT"
       $stderr.print "\nExiting #{pid}"
@@ -49,20 +50,21 @@ def handle_responder pid,f
       # p [ seq.map{ |g| g.nuc }, start, stop ]
       if seq.first.nuc == start and seq.last.nuc == stop and seq.first.prob > PROB_THRESHOLD and seq.last.prob > PROB_THRESHOLD
         $stderr.print "\nWe may have a match for #{source_pid} from #{pid}!"
+        $stderr.print "\nResponding to #{source_pid} (tag #{individual})"
         middle_seq = seq[1..-2]
         middle_seq.each_with_index do | g, i |
           if g.nuc != list[i] or g.prob < PROB_THRESHOLD
             # $stderr.print "\nWe have NO match!"
-            MPI::Comm::WORLD.send("NOMATCH!", source_pid, source_pid) 
+            MPI::Comm::WORLD.send("NOMATCH!", source_pid, tag) 
             return
           end
         end
         $stderr.print "\nWe have a match!"
-        MPI::Comm::WORLD.send("MATCH!", source_pid, source_pid) 
+        MPI::Comm::WORLD.send("MATCH!", source_pid, tag) 
         return
       end
       # $stderr.print "\nWe have NO match for #{source_pid} from #{pid}!"
-      MPI::Comm::WORLD.send("NOMATCH!", source_pid, source_pid) 
+      MPI::Comm::WORLD.send("NOMATCH!", source_pid, tag) 
     end
     $stderr.print "^"
   else
@@ -72,6 +74,6 @@ def handle_responder pid,f
 end
 
 while true
-  handle_responder(pid,f)
+  handle_responder(pid,f,individual)
 end
 
