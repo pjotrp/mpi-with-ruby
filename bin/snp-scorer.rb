@@ -10,7 +10,6 @@ require "json"
 require "parseline"
 require "genome_section"
 
-INDIVIDUALS = 4
 DO_SPLIT = true
 SPLIT_SIZE = 300
 PROB_THRESHOLD = 0.5
@@ -19,6 +18,7 @@ MPI_ANY_TAG    = -1  # from /usr/lib/openmpi/include/mpi.h
 
 pid = MPI::Comm::WORLD.rank()   # the rank of the MPI process
 num_processes = MPI::Comm::WORLD.size()    # the number of processes
+individuals = num_processes/2
 individual = pid+1
 
 pid = 0 if pid == nil
