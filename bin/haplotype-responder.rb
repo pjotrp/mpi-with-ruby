@@ -11,13 +11,6 @@ print "Rank #{process_rank} out of #{num_processes} processes (responder)\n"
 
 individual = process_rank - 4
 
-class Genotype
-  attr_reader :pos, :nuc, :prob
-  def initialize pos, nuc, prob
-    @pos = pos ; @nuc = nuc ; @prob = prob
-  end
-end
-
 # ---- Read ind file
 filen="test/data/ind#{process_rank+1}.tab"
 genome = []
