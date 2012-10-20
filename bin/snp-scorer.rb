@@ -10,8 +10,8 @@ require "json"
 require "parseline"
 require "genome_section"
 
-VERBOSE = false
-DO_SPLIT = false
+VERBOSE = true
+DO_SPLIT = true
 SPLIT_SIZE = 300
 PROB_THRESHOLD = 0.5
 MPI_ANY_SOURCE = -1  # from /usr/lib/openmpi/include/mpi.h
@@ -39,14 +39,15 @@ def broadcast_for_haplotype num_processes, pid, individuals, individual, start, 
 
   $destinations.each do | p |
     dest_pid = p + individuals
+    dest_individual = p + 1
     puts "Sending pos #{start.pos} from #{pid} to #{dest_pid} (tag #{individual})" if VERBOSE
     # We use a *blocking* send. After completion we can calculate the new probabilities
     # Non-blocking looks interesting, but actually won't help because we are in a lock-step
     # scoring process anyway
-    MPI::Comm::WORLD.send([poss,nucs,probs].to_json, dest_pid, individual) 
-    puts "Waiting pid #{pid} for #{dest_pid} (tag #{individual})" if VERBOSE
-    msg,status = MPI::Comm::WORLD.recv(dest_pid, individual)
-    puts "Received by pid #{pid} from #{dest_pid} (tag #{individual})" if VERBOSE
+    MPI::Comm::WORLD.send([poss,nucs,probs].to_json, dest_pid, dest_individual) 
+    puts "Waiting pid #{pid} for #{dest_pid} (tag #{dest_individual})" if VERBOSE
+    msg,status = MPI::Comm::WORLD.recv(dest_pid, dest_individual)
+    puts "Received by pid #{pid} from #{dest_pid} (tag #{dest_individual})" if VERBOSE
     if msg == "MATCH!"
       # Another haplotype matches our SNPs
       return true
@@ -101,7 +102,7 @@ end
 
 sleep 1 # wait for queue purge and stop responders
 
-MPI::Comm::WORLD.send("QUIT", pid+4, pid) 
+# MPI::Comm::WORLD.send("QUIT", pid+4, pid) 
 
 endwtime = MPI.wtime()
 $stderr.print "\nwallclock time of #{pid} = #{endwtime-startwtime}\n"

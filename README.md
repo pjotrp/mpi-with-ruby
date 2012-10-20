@@ -28,7 +28,7 @@ table is a simple (growing) file.
 
 # TODO
 
-* Do not respond to all messages
+* Do not respond to all messages 
 * Read files on the fly (done, slows things down!)
 * Check for sambamba to write file on the fly
 * Use Kernel::select for readers (done)

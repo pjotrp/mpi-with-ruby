@@ -3,8 +3,8 @@ $: << './lib'
 require "json"
 require "parseline"
 
-VERBOSE = false
-DO_SPLIT = false
+VERBOSE = true
+DO_SPLIT = true
 PROB_THRESHOLD = 0.5
 MPI_ANY_SOURCE = -1  # from /usr/lib/openmpi/include/mpi.h
 MPI_ANY_TAG    = -1  # from /usr/lib/openmpi/include/mpi.h
@@ -24,9 +24,9 @@ $genome = []  # global cache
 
 # The responder acts 'independently', receiving messages and responding to queries
 def handle_responder pid,f,individual
-  have_message,req = MPI::Comm::WORLD.iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG)
+  have_message,req = MPI::Comm::WORLD.iprobe(MPI_ANY_SOURCE, individual)
   if have_message
-    msg,status = MPI::Comm::WORLD.recv(MPI_ANY_SOURCE, MPI_ANY_TAG)
+    msg,status = MPI::Comm::WORLD.recv(MPI_ANY_SOURCE, individual)
     source_pid = status.source
     tag = status.tag
     # $stderr.print msg
