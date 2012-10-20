@@ -45,8 +45,9 @@ table is a simple (growing) file.
 
 Current performance based on 1000 SNPs:
 
-4 cores, 4 individuals ~ wallclock time 0.35s
-4 cores, 8 individuals ~ wallclock time 1.10s
+4 cores,  4 individuals ~ wallclock time 0.35s
+4 cores,  8 individuals ~ wallclock time 1.10s
+4 cores, 16 individuals ~ wallclock time 3.46s
 
 
 # Install
