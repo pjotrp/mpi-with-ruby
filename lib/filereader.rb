@@ -3,7 +3,7 @@ module FileReader
 
   def FileReader::tail_each_line f
     while true
-      select([f]) 
+      # select([f]) 
       s = f.gets 
       if s != nil
         return if s.strip == "End"
