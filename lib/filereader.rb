@@ -3,7 +3,7 @@ module FileReader
 
   def FileReader::tail_each_line f
     while true
-      # select([f])   <-- use when producer is slower than reader
+      select([f]) #  <-- use when producer is slower than reader
       s = f.gets 
       if s != nil
         if s.strip == "End"
@@ -14,7 +14,7 @@ module FileReader
       else
         # We are moving too fast
         $stderr.print "reader pause"
-        sleep 0.01
+        sleep 0.001
       end
     end
   end

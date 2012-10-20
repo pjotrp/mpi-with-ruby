@@ -22,3 +22,4 @@ contrib/
 test/data/
 *.tch
 *.tab
+*.bak

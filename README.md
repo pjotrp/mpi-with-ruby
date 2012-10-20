@@ -29,7 +29,9 @@ table is a simple (growing) file.
 # TODO
 
 * Do not respond to all messages
-* Use Kernel::select for readers
+* Check for sambamba to write file on the fly
+* Use Kernel::select for readers (done)
+* Add regression tests (done)
 * Scoring in the haplotype responder
 * Test MPI performance
 * Measure and speed up textual (un)marshalling, probably a bottle neck (currently using JSON)
