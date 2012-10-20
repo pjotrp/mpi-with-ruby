@@ -3,10 +3,13 @@ module FileReader
 
   def FileReader::tail_each_line f
     while true
-      # select([f]) 
+      # select([f])   <-- use when producer is slower than reader
       s = f.gets 
       if s != nil
-        return if s.strip == "End"
+        if s.strip == "End"
+          yield :eof
+          return
+        end
         yield s 
       else
         # We are moving too fast

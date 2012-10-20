@@ -7,6 +7,7 @@ module ParseLine
 
   def ParseLine::tail_each_rec f
     FileReader::tail_each_line(f) do |line|
+      break if line == :eof
       yield line.strip.split(/\t/)
     end
   end
