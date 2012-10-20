@@ -21,18 +21,23 @@ print "Rank #{pid} out of #{num_processes} processes (responder #{filen})\n" if 
 genome = []
 f = File.open(filen)
 $genome = []  # global cache
+$quit_messages = [] 
 
 # The responder acts 'independently', receiving messages and responding to queries
-def handle_responder pid,f,individual
+def handle_responder pid,f,individual,individuals
   have_message,req = MPI::Comm::WORLD.iprobe(MPI_ANY_SOURCE, individual)
   if have_message
     msg,status = MPI::Comm::WORLD.recv(MPI_ANY_SOURCE, individual)
     source_pid = status.source
     tag = status.tag
     # $stderr.print msg
-    if msg == "QUIT"
-      $stderr.print "\nExiting #{pid}" if VERBOSE
-      exit 0
+    if msg == "QUIT" 
+      $quit_messages << source_pid
+      $stderr.print "\nReceived QUIT by #{pid} from #{source_pid}"
+      if $quit_messages.size == individuals - 1
+        $stderr.print "\nExiting #{pid}" if VERBOSE
+        exit 0
+      end
     else
       # unpack info
       positions, list1, probs = JSON.parse(msg)
@@ -77,6 +82,6 @@ def handle_responder pid,f,individual
 end
 
 while true
-  handle_responder(pid,f,individual)
+  handle_responder(pid,f,individual,individuals)
 end
 

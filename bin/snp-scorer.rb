@@ -28,6 +28,8 @@ startwtime = MPI.wtime()
 filen="test/data/ind#{individual}.tab"
 print "Rank #{pid} out of #{num_processes} processes (#{filen})\n" if VERBOSE
 
+# Destination haplotype responders - we randomize the list not to hit the same
+# nodes at once
 $destinations = (0..individuals-1).to_a.sort{ rand() - 0.5 } - [pid]
 
 def broadcast_for_haplotype num_processes, pid, individuals, individual, start, list, stop
@@ -100,11 +102,14 @@ GenomeSection::each(f,DO_SPLIT,SPLIT_SIZE,PROB_THRESHOLD) do | genome_section |
   end
 end
 
-sleep 1 # wait for queue purge and stop responders
-
-# MPI::Comm::WORLD.send("QUIT", pid+4, pid) 
-
 endwtime = MPI.wtime()
 $stderr.print "\nwallclock time of #{pid} = #{endwtime-startwtime}\n"
+
+$destinations.each do | p |
+  dest_pid = p + individuals
+  dest_individual = p + 1
+  $stderr.print "\nSending QUIT from #{pid} to #{dest_pid}" if VERBOSE
+  MPI::Comm::WORLD.send("QUIT", dest_pid, dest_individual) 
+end
 
 
