@@ -28,16 +28,26 @@ table is a simple (growing) file.
 
 # TODO
 
-* Do not respond to all messages 
-* Read files on the fly (done, slows things down!)
-* Check for sambamba to write file on the fly
+* Do not respond to all messages (done)
+* Read files on the fly (done)
 * Use Kernel::select for readers (done)
 * Add regression tests (done)
+* Correct MPI finalize handling (done)
+
+* Simulate SNP distances
+* Check for sambamba to write file on the fly
 * Scoring in the haplotype responder
 * Test MPI performance
 * Measure and speed up textual (un)marshalling, probably a bottle neck (currently using JSON)
 * If MPI itself is a bottle neck, combine messages into larger messages
-* Correct MPI finalize
+
+# Performance
+
+Current performance based on 1000 SNPs:
+
+4 cores, 4 individuals ~ wallclock time 0.35s
+4 cores, 8 individuals ~ wallclock time 1.10s
+
 
 # Install
 
