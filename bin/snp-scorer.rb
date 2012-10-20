@@ -10,7 +10,8 @@ require "json"
 require "parseline"
 require "genome_section"
 
-DO_SPLIT = true
+VERBOSE = false
+DO_SPLIT = false
 SPLIT_SIZE = 300
 PROB_THRESHOLD = 0.5
 MPI_ANY_SOURCE = -1  # from /usr/lib/openmpi/include/mpi.h
@@ -25,7 +26,7 @@ pid = 0 if pid == nil
 startwtime = MPI.wtime()
 
 filen="test/data/ind#{individual}.tab"
-print "Rank #{pid} out of #{num_processes} processes (#{filen})\n"
+print "Rank #{pid} out of #{num_processes} processes (#{filen})\n" if VERBOSE
 
 $destinations = (0..individuals-1).to_a.sort{ rand() - 0.5 } - [pid]
 
@@ -38,14 +39,14 @@ def broadcast_for_haplotype num_processes, pid, individuals, individual, start, 
 
   $destinations.each do | p |
     dest_pid = p + individuals
-    puts "Sending pos #{start.pos} from #{pid} to #{dest_pid} (tag #{individual})"
+    puts "Sending pos #{start.pos} from #{pid} to #{dest_pid} (tag #{individual})" if VERBOSE
     # We use a *blocking* send. After completion we can calculate the new probabilities
     # Non-blocking looks interesting, but actually won't help because we are in a lock-step
     # scoring process anyway
     MPI::Comm::WORLD.send([poss,nucs,probs].to_json, dest_pid, individual) 
-    puts "Waiting pid #{pid} for #{dest_pid} (tag #{individual})"
+    puts "Waiting pid #{pid} for #{dest_pid} (tag #{individual})" if VERBOSE
     msg,status = MPI::Comm::WORLD.recv(dest_pid, individual)
-    puts "Received by pid #{pid} from #{dest_pid} (tag #{individual})"
+    puts "Received by pid #{pid} from #{dest_pid} (tag #{individual})" if VERBOSE
     if msg == "MATCH!"
       # Another haplotype matches our SNPs
       return true

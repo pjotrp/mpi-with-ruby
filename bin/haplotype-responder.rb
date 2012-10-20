@@ -3,7 +3,8 @@ $: << './lib'
 require "json"
 require "parseline"
 
-DO_SPLIT = true
+VERBOSE = false
+DO_SPLIT = false
 PROB_THRESHOLD = 0.5
 MPI_ANY_SOURCE = -1  # from /usr/lib/openmpi/include/mpi.h
 MPI_ANY_TAG    = -1  # from /usr/lib/openmpi/include/mpi.h
@@ -16,7 +17,7 @@ individual = pid+1-individuals             # counting individuals from 1
 
 # ---- Read ind file
 filen="test/data/ind#{individual}.tab"
-print "Rank #{pid} out of #{num_processes} processes (responder #{filen})\n"
+print "Rank #{pid} out of #{num_processes} processes (responder #{filen})\n" if VERBOSE
 genome = []
 f = File.open(filen)
 $genome = []  # global cache
@@ -30,7 +31,7 @@ def handle_responder pid,f,individual
     tag = status.tag
     # $stderr.print msg
     if msg == "QUIT"
-      $stderr.print "\nExiting #{pid}"
+      $stderr.print "\nExiting #{pid}" if VERBOSE
       exit 0
     else
       # unpack info
@@ -49,8 +50,10 @@ def handle_responder pid,f,individual
       seq = $genome[start_pos..end_pos]
       # p [ seq.map{ |g| g.nuc }, start, stop ]
       if seq.first.nuc == start and seq.last.nuc == stop and seq.first.prob > PROB_THRESHOLD and seq.last.prob > PROB_THRESHOLD
-        $stderr.print "\nWe may have a match for #{source_pid} from #{pid}!"
-        $stderr.print "\nResponding to #{source_pid} (tag #{individual})"
+        if VERBOSE
+          $stderr.print "\nWe may have a match for #{source_pid} from #{pid}!" 
+          $stderr.print "\nResponding to #{source_pid} (tag #{individual})"
+        end
         middle_seq = seq[1..-2]
         middle_seq.each_with_index do | g, i |
           if g.nuc != list[i] or g.prob < PROB_THRESHOLD
@@ -59,14 +62,14 @@ def handle_responder pid,f,individual
             return
           end
         end
-        $stderr.print "\nWe have a match!"
+        $stderr.print "\nWe have a match!" if VERBOSE
         MPI::Comm::WORLD.send("MATCH!", source_pid, tag) 
         return
       end
       # $stderr.print "\nWe have NO match for #{source_pid} from #{pid}!"
       MPI::Comm::WORLD.send("NOMATCH!", source_pid, tag) 
     end
-    $stderr.print "^"
+    $stderr.print "^" if VERBOSE
   else
     # $stderr.print "W"
     # sleep 0.01

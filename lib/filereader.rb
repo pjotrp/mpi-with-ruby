@@ -13,7 +13,7 @@ module FileReader
         yield s 
       else
         # We are moving too fast
-        $stderr.print "reader pause"
+        # $stderr.print "reader pause"
         sleep 0.01
       end
     end
