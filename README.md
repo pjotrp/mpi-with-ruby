@@ -11,7 +11,7 @@ We have three routines:
 2. Scorer: read data, score and haplotype broadcast, receive and write
 3. Responder: read data, score strong SNPs only, and respond to haplotype broadcast
 
-Serially:
+Serial explanation:
 
 The reader reads a file of location quality scores, and broadcasts possible
 combinations of SNPs.
@@ -25,6 +25,14 @@ responds to queries by other individuals.
 
 The scorer and responder share 'memory' - that is the data file.  The
 table is a simple (growing) file.
+
+# TODO
+
+* Do not respond to all messages
+* Use Kernel::select for readers
+* Scoring in the haplotype responder
+* Test MPI performance
+* Measure and speed up textual (un)marshalling, probably a bottle neck (currently using JSON)
 
 # Install
 
