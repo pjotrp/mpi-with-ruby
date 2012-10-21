@@ -3,8 +3,9 @@
 NUM=$1
 if [ -z $NUM ]; then
   NUM=4
+else
+  shift
 fi
-shift
 
 cp test/regression/input/* test/data
 

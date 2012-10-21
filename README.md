@@ -34,9 +34,10 @@ table is a simple (growing) file.
 * Add regression tests (done)
 * Correct MPI finalize handling (done)
 * Check for sambamba to write file on the fly (done)
+* Test MPI performance on single machine (done)
 * Simulate SNP distances
 * Scoring in the haplotype responder
-* Test MPI performance
+* Test MPI performance on cluster
 * Measure and speed up textual (un)marshalling, probably a bottle neck (currently using JSON)
 * If MPI itself is a bottle neck, combine messages into larger messages
 
@@ -56,10 +57,11 @@ removing MPI::iprobe gains time
 * 4 cores, 16 individuals ~ wallclock time 3.11s
 
 Adding "-mca yield_when_idle 1" slows things down significantly (on a
-single 4-core Linux 3.2.0 box).
+single 4-core Linux 3.2.0 box). Still need to test that on a cluster.
 
-Other tuning. When moving Kernel::select after an empty gets, 10% gets
-knocked off.
+Other tuning:
+
+* When moving Kernel::select after an empty f.gets, 10% gets knocked off.
 
 
 # Install

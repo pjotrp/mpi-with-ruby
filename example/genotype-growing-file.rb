@@ -6,7 +6,7 @@ $: << './lib'
 require 'parseline'
 
 File.open(ARGV[0]) do | f |
-  ParseLine::each_genotype(f) do |g|
+  ParseLine::tail_each_genotype(f) do |g|
     puts g
   end
 end
