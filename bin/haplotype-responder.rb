@@ -25,8 +25,8 @@ $quit_messages = []
 
 # The responder acts 'independently', receiving messages and responding to queries
 def handle_responder pid,f,individual,individuals
-  have_message,req = MPI::Comm::WORLD.iprobe(MPI_ANY_SOURCE, individual)
-  if have_message
+  # have_message,req = MPI::Comm::WORLD.iprobe(MPI_ANY_SOURCE, individual)
+  # if have_message
     msg,status = MPI::Comm::WORLD.recv(MPI_ANY_SOURCE, individual)
     source_pid = status.source
     tag = status.tag
@@ -67,7 +67,7 @@ def handle_responder pid,f,individual,individuals
             return
           end
         end
-        $stderr.print "\nWe have a match!" if VERBOSE
+        print "\nWe have a match!" if VERBOSE
         MPI::Comm::WORLD.send("MATCH!", source_pid, tag) 
         return
       end
@@ -75,10 +75,10 @@ def handle_responder pid,f,individual,individuals
       MPI::Comm::WORLD.send("NOMATCH!", source_pid, tag) 
     end
     $stderr.print "^" if VERBOSE
-  else
+  # else
     # $stderr.print "W"
     # sleep 0.01
-  end
+  # end
 end
 
 while true

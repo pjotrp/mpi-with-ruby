@@ -7,6 +7,10 @@ MUTATION_RATE = 200  # 1 in 200
 NUCLEOTIDES = "a g c t".split
 
 individuals = ARGV[0].to_i
+time_per_line = TIME_PER_LINE
+if ARGV.size == 2
+  time_per_line = ARGV[1].to_f
+end
 
 reference = []
 
@@ -54,7 +58,7 @@ end
     f1.printf "%i\t%s\t%i\t%s\t%.2f\n",j,reference[j].join,h[i],haplotypes[h1][j],prob
     f1.flush
   end
-  sleep TIME_PER_LINE
+  sleep time_per_line
   print "." if j % 200 == 0
 end
 (0..individuals-1).each do | i |

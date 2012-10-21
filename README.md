@@ -33,9 +33,8 @@ table is a simple (growing) file.
 * Use Kernel::select for readers (done)
 * Add regression tests (done)
 * Correct MPI finalize handling (done)
-
+* Check for sambamba to write file on the fly (done)
 * Simulate SNP distances
-* Check for sambamba to write file on the fly
 * Scoring in the haplotype responder
 * Test MPI performance
 * Measure and speed up textual (un)marshalling, probably a bottle neck (currently using JSON)
@@ -43,11 +42,24 @@ table is a simple (growing) file.
 
 # Performance
 
-Current performance based on 1000 SNPs:
+Current performance based on 1000 SNPs (on a single 4 core box):
 
-4 cores,  4 individuals ~ wallclock time 0.35s
-4 cores,  8 individuals ~ wallclock time 1.10s
-4 cores, 16 individuals ~ wallclock time 3.46s
+* 4 cores,  4 individuals ~ wallclock time 0.35s
+* 4 cores,  8 individuals ~ wallclock time 1.10s
+* 4 cores, 16 individuals ~ wallclock time 3.46s
+
+removing MPI::iprobe gains time
+
+* 4 cores,  2 individuals ~ wallclock time 0.08s
+* 4 cores,  4 individuals ~ wallclock time 0.23s
+* 4 cores,  8 individuals ~ wallclock time 1.07s
+* 4 cores, 16 individuals ~ wallclock time 3.11s
+
+Adding "-mca yield_when_idle 1" slows things down significantly (on a
+single 4-core Linux 3.2.0 box).
+
+Other tuning. When moving Kernel::select after an empty gets, 10% gets
+knocked off.
 
 
 # Install
