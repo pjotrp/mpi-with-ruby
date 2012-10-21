@@ -80,24 +80,52 @@ Other tuning:
 
 # Install
 
-Also install mpi-ruby 
+Also install mpi-ruby using Ruby 1.8.7 on [rvm](https://rvm.io/rvm/install/).
 
 ```sh
     apt-get install mpi-default-dev mpi-default-bin
     rvm use 1.8.7
-    gem install ruby-mpi
+    # gem install ruby-mpi <-- actually we don't use this
 ```
 
-Note we use 1.8.7 because the MPI wrappers are not supported on later Rubies.
-
-Next build mpi-ruby - a C wrapper - from https://github.com/abedra/mpi-ruby and execute
+You should be able to do
 
 ```sh
-    env LD_LIBRARY_PATH=~/.rvm/rubies/ruby-1.8.7-p352/lib/ mpiexec -np 4 contrib/mpi-ruby/src/mpi_ruby example/basic-test.rb 
+    pjotrp@login2:~$ ~/.rvm/rubies/ruby-1.8.7-p371/bin/ruby -v
+    ruby 1.8.7 (2012-10-12 patchlevel 371) [x86_64-linux]
+```
+
+Note we use 1.8.7 because below MPI wrappers are not supported on later Rubies.
+
+Next build mpi-ruby - a C wrapper - from https://github.com/pjotrp/mpi-ruby.git and execute
+
+```sh
+    git clone https://github.com/pjotrp/mpi-ruby.git
+    cd mpi-ruby
+    module load openmpi/gnu        # on LISA
+    module unload compilerwrappers # LISA: otherwise the build system gets confused
+```
+
+Modify src/Makefile to contain something like this
+
+```make
+Makefile:RUBY_CFLAGS = -I/usr/lib/ruby/1.8/x86_64-linux -I/usr/include -I/home/pjotrp/.rvm/src/ruby-1.8.7-p371
+LIBS =  -lruby -L/home/pjotrp/.rvm/rubies/ruby-1.8.7-p371/lib
+RUBY_LIBS = -lruby -L/home/pjotrp/.rvm/rubies/ruby-1.8.7-p371/lib
+````
+
+```sh
+    env LD_LIBRARY_PATH=~/.rvm/rubies/ruby-1.8.7-p371/lib mpiexec -np 4 contrib/mpi-ruby/src/mpi_ruby example/basic-test.rb 
         I'm 0 and sending a message to 1
         I'm 2 and sending a message to 3
         I'm 1 and this message came from 0 with tag 0: 'Hello, I'm 0, you must be 1'
         I'm 3 and this message came from 2 with tag 0: 'Hello, I'm 2, you must be 3'
+```
+
+On LISA
+
+```sh
+pjotrp@login2:~$ ~/opt/ruby/mpi-with-ruby/test-lisa.sh
 ```
 
 Test MPI with Tokyocabinet:
