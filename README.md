@@ -35,8 +35,9 @@ table is a simple (growing) file.
 * Correct MPI finalize handling (done)
 * Check for sambamba to write file on the fly (done)
 * Test MPI performance on single machine (done)
-* Simulate SNP distances
+* Simulate SNP distances (in progress)
 * Scoring in the haplotype responder
+* Use sambamba with MPI on cluster
 * Test MPI performance on cluster
 * Measure and speed up textual (un)marshalling, probably a bottle neck (currently using JSON)
 * If MPI itself is a bottle neck, combine messages into larger messages
@@ -46,7 +47,8 @@ table is a simple (growing) file.
 I found is that mpi-ruby contains a nasty bug. The MPI
 send command does not initialize the buffer size. Another catch is
 that the number of MPI messages is double that what it should be - as
-the (uninitialized!) buffer size is sent as message separately.
+the (uninitialized!) buffer size is sent as message separately. On a
+local machine this gives an advantage, but on a network it may not.
 
 # Performance
 
