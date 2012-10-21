@@ -40,20 +40,20 @@ def handle_responder pid,f,individual,individuals
       end
     else
       # unpack info
-      positions, list1, probs = JSON.parse(msg)
+      idxs, positions, list1, probs = JSON.parse(msg)
+      start_idx, list_idx, end_idx = idxs
       start_pos, list_pos, end_pos = positions
       start, list, stop = list1
       start_prob, list_prob, end_prob = probs
       # Do we have matching sequence?
       # First make sure the reader has gotten to this point... FIXME - this stops all
-      if end_pos > $genome.size-1
+      if end_idx > $genome.size-1
         ParseLine::tail_each_genotype(f) do | g |
           $genome << g
-          break if DO_SPLIT and end_pos <= $genome.size-1
+          break if DO_SPLIT and end_idx <= $genome.size-1
         end
       end
-      seq = $genome[start_pos..end_pos]
-      # p [ seq.map{ |g| g.nuc }, start, stop ]
+      seq = $genome[start_idx..end_idx]
       if seq.first.nuc == start and seq.last.nuc == stop and seq.first.prob > PROB_THRESHOLD and seq.last.prob > PROB_THRESHOLD
         if VERBOSE
           $stderr.print "\nWe may have a match for #{source_pid} from #{pid}!" 

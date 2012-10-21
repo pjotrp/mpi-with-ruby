@@ -1,9 +1,13 @@
 
 class Genotype
-  attr_reader :idx, :nuc
+  attr_reader :nuc
   def initialize rec # , nuc=nil, prob=nil
     raise "Record size error #{rec.join(' ')}, size #{rec.size}" if rec.size != 6
-    @idx,@s_pos,@ref,@haplotype,@nuc,@s_prob = rec
+    @s_idx,@s_pos,@ref,@haplotype,@nuc,@s_prob = rec
+  end
+
+  def idx
+    @idx ||= @s_idx.to_i
   end
 
   def pos
@@ -15,7 +19,7 @@ class Genotype
   end
 
   def to_s
-    "#{idx} #{@s_pos} #{nuc} #{@s_prob}"
+    "#{@s_idx} #{@s_pos} #{nuc} #{@s_prob}"
   end
 end
 

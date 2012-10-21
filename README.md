@@ -41,6 +41,13 @@ table is a simple (growing) file.
 * Measure and speed up textual (un)marshalling, probably a bottle neck (currently using JSON)
 * If MPI itself is a bottle neck, combine messages into larger messages
 
+# mpi-ruby bug(s)
+
+I found is that mpi-ruby contains a nasty bug. The MPI
+send command does not initialize the buffer size. Another catch is
+that the number of MPI messages is double that what it should be - as
+the (uninitialized!) buffer size is sent as message separately.
+
 # Performance
 
 Current performance based on 1000 SNPs (on a single 4 core box):

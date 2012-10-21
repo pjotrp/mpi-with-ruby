@@ -32,21 +32,24 @@ print "Rank #{pid} out of #{num_processes} processes (#{filen})\n" if VERBOSE
 # nodes at once
 $destinations = (0..individuals-1).to_a.sort{ rand() - 0.5 } - [pid]
 
-def broadcast_for_haplotype num_processes, pid, individuals, individual, start, list, stop
-  # p [start.nuc,list.map { |g| g.nuc }.join,stop.nuc]
-  # Turn message into a string (serialize)
-  nucs  = [ start.nuc, list.map { |g| g.nuc }, stop.nuc ]
-  probs = [ start.prob, list.map { |g| g.prob }, stop.prob ]
-  poss  = [ start.pos, list.map { |g| g.pos }, stop.pos ]
+# We broadcast for a range of matching SNPs. The start genotype and the stop genotype
+# are the first and last SNPs. middle contains the ones in the middle.
+#
+def broadcast_for_haplotype num_processes, pid, individuals, individual, start, middle, stop
+  # Prepare turning message into a string (serialize, here we use JSON)
+  nucs  = [ start.nuc, middle.map { |g| g.nuc }, stop.nuc ]
+  probs = [ start.prob, middle.map { |g| g.prob }, stop.prob ]
+  poss  = [ start.pos, middle.map { |g| g.pos }, stop.pos ]
+  idxs  = [ start.idx, middle.map { |g| g.idx }, stop.idx ]  # cheating a bit for now
 
   $destinations.each do | p |
     dest_pid = p + individuals
     dest_individual = p + 1
-    puts "Sending pos #{start.pos} from #{pid} to #{dest_pid} (tag #{individual})" if VERBOSE
+    puts "Sending idx #{start.idx} from #{pid} to #{dest_pid} (tag #{individual})" if VERBOSE
     # We use a *blocking* send. After completion we can calculate the new probabilities
     # Non-blocking looks interesting, but actually won't help because we are in a lock-step
     # scoring process anyway
-    MPI::Comm::WORLD.send([poss,nucs,probs].to_json, dest_pid, dest_individual) 
+    MPI::Comm::WORLD.send([idxs,poss,nucs,probs].to_json, dest_pid, dest_individual) 
     puts "Waiting pid #{pid} for #{dest_pid} (tag #{dest_individual})" if VERBOSE
     msg,status = MPI::Comm::WORLD.recv(dest_pid, dest_individual)
     puts "Received by pid #{pid} from #{dest_pid} (tag #{dest_individual})" if VERBOSE
