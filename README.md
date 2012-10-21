@@ -66,6 +66,13 @@ removing MPI::iprobe gains time
 Adding "-mca yield_when_idle 1" slows things down significantly (on a
 single 4-core Linux 3.2.0 box). Still need to test that on a cluster.
 
+fixing the mpi-ruby send buffer bug
+
+* 4 cores,  2 individuals ~ wallclock time 0.03s
+* 4 cores,  4 individuals ~ wallclock time 0.11s
+* 4 cores,  8 individuals ~ wallclock time 0.50s
+* 4 cores, 16 individuals ~ wallclock time 1.54s
+
 Other tuning:
 
 * When moving Kernel::select after an empty f.gets, 10% gets knocked off.
