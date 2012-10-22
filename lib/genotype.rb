@@ -21,6 +21,11 @@ class Genotype
     @prob ||= @s_prob.to_f
   end
 
+  def set_prob prob
+    @prob = prob
+    @s_prob = prob.to_s
+  end
+
   def info
     @s_prob+nuc
   end

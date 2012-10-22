@@ -49,7 +49,7 @@ def broadcast_for_haplotype num_processes, pid, individuals, individual, start, 
   send_msg = GenotypeSerialize::serialize([start]+middle+[stop])
   p send_msg
 
-  result = []
+  results = []
   $destinations.each do | p |
     dest_pid = p + individuals
     dest_individual = p + 1
@@ -62,12 +62,24 @@ def broadcast_for_haplotype num_processes, pid, individuals, individual, start, 
     if msg != "NOMATCH!"
       print "!",msg
       $match_count += 1
-      result << GenotypeSerialize::deserialize(msg)
+      results << GenotypeSerialize::deserialize(msg)
     end
   end
-  # Calculate the new probabilities FIXME
-  if result.size > 0
-    result.first
+  # Calculate the new probabilities by combining all results
+  if results.size > 0
+    final = {}
+    list = []
+    results.each do | result |
+      result.each do | h |
+        pos = h.pos
+        if not final[pos] 
+          final[pos] = h.dup
+        elsif final[pos].prob < h.prob
+          final[pos].set_prob((h.prob + final[pos].prob)/2)
+        end
+      end
+    end
+    final.map { |k,v| v }
   else 
     []
   end
