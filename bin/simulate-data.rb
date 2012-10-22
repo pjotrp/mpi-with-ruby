@@ -17,7 +17,7 @@ reference = []
 
 pos =0
 (0..SIZE-1).each do | i |
-  pos += rand(100)  # assume SNPs are 100bp apart, it does not really matter
+  pos += rand(100)+1  # assume SNPs are 100bp apart, it does not really matter
   snploc << pos
   reference <<  [NUCLEOTIDES[rand(4)],NUCLEOTIDES[rand(4)]]
 end
