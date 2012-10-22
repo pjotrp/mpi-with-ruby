@@ -85,8 +85,8 @@ added SNP position based search is more 'complicated'
 dropped JSON and changed the scoring algorithm, fixed some bugs
 
 * 4 cores,  2 individuals ~ wallclock time 0.03s
-* 4 cores,  4 individuals ~ wallclock time 0.18s
-* 4 cores,  8 individuals ~ wallclock time 0.58s
+* 4 cores,  4 individuals ~ wallclock time 0.13s
+* 4 cores,  8 individuals ~ wallclock time 0.61s
 * 4 cores, 16 individuals ~ wallclock time 2.87s
 
 other tuning:

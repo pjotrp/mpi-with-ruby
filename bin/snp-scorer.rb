@@ -75,7 +75,7 @@ def broadcast_for_haplotype num_processes, pid, individuals, individual, start, 
         end
       end
     end
-    final.map { |k,v| v }  # flatten to array
+    final.sort.map { |k,v| v }  # flatten to array
   else 
     []
   end
