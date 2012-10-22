@@ -43,13 +43,28 @@ def handle_responder pid,f,individual,individuals
     start_prob, list_prob, end_prob = probs
     # Do we have matching sequence?
     # First make sure the reader has gotten to this point... FIXME - this stops all
-    if end_idx > $snp_cache.size-1
+    # if end_idx > $snp_cache.size-1
+    #   ParseLine::tail_each_genotype(f) do | g |
+    #     $snp_cache << g
+    #     break if DO_SPLIT and end_idx <= $snp_cache.size-1
+    #   end
+    # end
+    current_pos = end_pos
+    if $snp_cache.size ==0 or current_pos > $snp_cache.last.pos 
+      # keep filling the cache, until we have reached the right section
       ParseLine::tail_each_genotype(f) do | g |
+        if g == :eof
+          MPI::Comm::WORLD.send("NOMATCH!", source_pid, tag) 
+          return
+        end
         $snp_cache << g
-        break if DO_SPLIT and end_idx <= $snp_cache.size-1
+        break if current_pos <= g.pos
       end
     end
-    seq = $snp_cache[start_idx..end_idx]
+    # find first item from the tail
+    first = $snp_cache.rindex { |g| g.pos <= start_pos }
+    last  = $snp_cache.rindex { |g| g.pos >= end_pos }
+    seq = $snp_cache[first..last]
     if seq.first.nuc == start and seq.last.nuc == stop and seq.first.prob > PROB_THRESHOLD and seq.last.prob > PROB_THRESHOLD
       if VERBOSE
         $stderr.print "\nWe may have a match for #{source_pid} from #{pid}!" 

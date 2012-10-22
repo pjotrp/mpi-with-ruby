@@ -75,6 +75,7 @@ GenomeSection::each(f,DO_SPLIT,SPLIT_SIZE,PROB_THRESHOLD) do | genome_section |
   stop  = nil
   genome_section.each do | g |
     # $stderr.print "." if i % 100 == 0
+    break if g == :eof
     next if g.nuc == 'x'  # note that not all nuc positions will be added
     if g.prob > PROB_THRESHOLD
       # High prob SNP
