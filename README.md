@@ -35,9 +35,10 @@ table is a simple (growing) file.
 * Correct MPI finalize handling (done)
 * Check for sambamba to write file on the fly (done)
 * Test MPI performance on single machine (done)
-* Simulate SNP distances (in progress)
-* Scoring in the haplotype responder
-* Use sambamba with MPI on cluster
+* Simulate SNP distances (done)
+* Scoring in the haplotype responder (done)
+* Use sambamba snpcaller with MPI Ruby 
+* The same, but now on the cluster
 * Test MPI performance on cluster
 * Measure and speed up textual (un)marshalling, probably a bottle neck (currently using JSON)
 * If MPI itself is a bottle neck, combine messages into larger messages
@@ -78,8 +79,7 @@ added SNP position based search is more 'complicated'
 * 4 cores,  2 individuals ~ wallclock time 0.03s
 * 4 cores,  4 individuals ~ wallclock time 0.09s
 * 4 cores,  8 individuals ~ wallclock time 0.53s
-* 4 cores, 16 individuals ~ wallclock time 3.78s
-
+* 4 cores, 16 individuals ~ wallclock time 3.33s
 
 Other tuning:
 

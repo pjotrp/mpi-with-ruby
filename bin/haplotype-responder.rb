@@ -36,8 +36,8 @@ def handle_responder pid,f,individual,individuals
     end
   else
     # unpack info
-    idxs, positions, list1, probs = JSON.parse(msg)
-    start_idx, list_idx, end_idx = idxs
+    positions, list1, probs = JSON.parse(msg)
+    # start_idx, list_idx, end_idx = idxs
     start_pos, list_pos, end_pos = positions
     start, list, stop = list1
     start_prob, list_prob, end_prob = probs

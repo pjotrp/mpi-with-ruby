@@ -37,7 +37,7 @@ $destinations = (0..individuals-1).to_a.sort{ rand() - 0.5 } - [pid]
 #
 def broadcast_for_haplotype num_processes, pid, individuals, individual, start, middle, stop
   # Prepare turning message into a string (serialize, here we use JSON)
-  idxs  = [ start.idx, middle.map { |g| g.idx }, stop.idx ]  # cheating a bit for now
+  # idxs  = [ start.idx, middle.map { |g| g.idx }, stop.idx ]  # cheating a bit for now
   poss  = [ start.pos, middle.map { |g| g.pos }, stop.pos ]
   nucs  = [ start.nuc, middle.map { |g| g.nuc }, stop.nuc ]
   probs = [ start.prob, middle.map { |g| g.prob }, stop.prob ]
@@ -49,7 +49,7 @@ def broadcast_for_haplotype num_processes, pid, individuals, individual, start, 
     # We use a *blocking* send. After completion we can calculate the new probabilities
     # Non-blocking looks interesting, but actually won't help because we are in a lock-step
     # scoring process anyway
-    MPI::Comm::WORLD.send([idxs,poss,nucs,probs].to_json, dest_pid, dest_individual) 
+    MPI::Comm::WORLD.send([poss,nucs,probs].to_json, dest_pid, dest_individual) 
     puts "Waiting pid #{pid} for #{dest_pid} (tag #{dest_individual})" if VERBOSE
     msg,status = MPI::Comm::WORLD.recv(dest_pid, dest_individual)
     puts "Received by pid #{pid} from #{dest_pid} (tag #{dest_individual})" if VERBOSE
