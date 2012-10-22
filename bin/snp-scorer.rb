@@ -50,7 +50,7 @@ def broadcast_for_haplotype num_processes, pid, individuals, individual, start, 
   $destinations.each do | p |
     dest_pid = p + individuals
     dest_individual = p + 1
-    puts "Sending idx #{start.idx} from #{pid} to #{dest_pid} (tag #{individual})" if VERBOSE
+    puts "Sending idx #{start.idx} from #{pid} to #{dest_pid} (tag #{dest_individual})" if VERBOSE
     # We use a *blocking* send. After completion we can calculate the new probabilities
     # Non-blocking looks interesting, but actually won't help because we are in a lock-step
     # scoring process anyway
@@ -61,7 +61,6 @@ def broadcast_for_haplotype num_processes, pid, individuals, individual, start, 
       msg,status = MPI::Comm::WORLD.recv(dest_pid, dest_individual)
       puts "Received by pid #{pid} from #{dest_pid} (tag #{dest_individual})" if VERBOSE
     end
-    $message_count += 1
     if msg == "MATCH!"
       # Another haplotype matches our SNPs
       $match_count += 1
@@ -97,6 +96,7 @@ GenomeSection::each(f,DO_SPLIT,SPLIT_SIZE,PROB_THRESHOLD) do | genome_section |
         # We have a list of SNPs!
         p [ pid, start.pos, start.info,list.map { |g| g.info },stop.info ]
         list2 = broadcast_for_haplotype(num_processes,pid,individuals,individual,start,list,stop)
+        $message_count += 1
         # write SNPs to output file
         outf.print start.pos,"\t",start.nuc,"\t",start.prob,"\tA\n"
         list2.each do | g |
