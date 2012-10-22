@@ -11,7 +11,7 @@ require "parseline"
 require "genome_section"
 
 VERBOSE = false
-DO_SPLIT = true
+DO_SPLIT = true      # split the input file - to start up quicker
 SPLIT_SIZE = 300
 PROB_THRESHOLD = 0.5
 MIN_MESSAGE_SIZE = 0 # set to 0 for all messages
@@ -19,6 +19,7 @@ MPI_ANY_SOURCE = -1  # from /usr/lib/openmpi/include/mpi.h
 MPI_ANY_TAG    = -1  # from /usr/lib/openmpi/include/mpi.h
 
 $message_count = 0
+$match_count = 0
 
 pid = MPI::Comm::WORLD.rank()   # the rank of the MPI process
 num_processes = MPI::Comm::WORLD.size()    # the number of processes
@@ -45,6 +46,7 @@ def broadcast_for_haplotype num_processes, pid, individuals, individual, start, 
   nucs  = [ start.nuc, middle.map { |g| g.nuc }, stop.nuc ]
   probs = [ start.prob, middle.map { |g| g.prob }, stop.prob ]
 
+  result = []
   $destinations.each do | p |
     dest_pid = p + individuals
     dest_individual = p + 1
@@ -52,18 +54,25 @@ def broadcast_for_haplotype num_processes, pid, individuals, individual, start, 
     # We use a *blocking* send. After completion we can calculate the new probabilities
     # Non-blocking looks interesting, but actually won't help because we are in a lock-step
     # scoring process anyway
-    MPI::Comm::WORLD.send([poss,nucs,probs].to_json, dest_pid, dest_individual) 
-    puts "Waiting pid #{pid} for #{dest_pid} (tag #{dest_individual})" if VERBOSE
-    msg,status = MPI::Comm::WORLD.recv(dest_pid, dest_individual)
-    puts "Received by pid #{pid} from #{dest_pid} (tag #{dest_individual})" if VERBOSE
+    message = [poss,nucs,probs].to_json
+    if num_processes > 1
+      MPI::Comm::WORLD.send(message, dest_pid, dest_individual) 
+      puts "Waiting pid #{pid} for #{dest_pid} (tag #{dest_individual})" if VERBOSE
+      msg,status = MPI::Comm::WORLD.recv(dest_pid, dest_individual)
+      puts "Received by pid #{pid} from #{dest_pid} (tag #{dest_individual})" if VERBOSE
+    end
     $message_count += 1
     if msg == "MATCH!"
       # Another haplotype matches our SNPs
-      print "!"
-      return true
+      $match_count += 1
+      result << middle
     end
   end
-  false
+  if result.size > 0
+    middle
+  else 
+    []
+  end
 end
 
 # ---- Read ind file
@@ -79,46 +88,45 @@ GenomeSection::each(f,DO_SPLIT,SPLIT_SIZE,PROB_THRESHOLD) do | genome_section |
   list  = []
   stop  = nil
   genome_section.each do | g |
-    # $stderr.print "." if i % 100 == 0
     break if g == :eof
     next if g.nuc == 'x'  # note that not all nuc positions will be added
-    if g.prob > PROB_THRESHOLD and list.size >= MIN_MESSAGE_SIZE
-      # High prob SNP, we send out a broadcast
-      if start and list.size > 0
+    if g.prob > PROB_THRESHOLD
+      # High prob SNP, so we can send out a broadcast
+      stop = g
+      if start and list.size > 0 
         # We have a list of SNPs!
-        stop = g
-        result = broadcast_for_haplotype(num_processes,pid,individuals,individual,start,list,stop) if list.size < 4  # ignore highly variable regions
+        p [ pid, start.pos, start.info,list.map { |g| g.info },stop.info ]
+        list2 = broadcast_for_haplotype(num_processes,pid,individuals,individual,start,list,stop)
         # write SNPs to output file
-        outf.print start.pos,"\t",start.nuc,"\n"
-        if result == true
-          list.each do | g |
-            outf.print g.pos,"\t",g.nuc,"\n"
-          end
+        outf.print start.pos,"\t",start.nuc,"\t",start.prob,"\tA\n"
+        list2.each do | g |
+          outf.print g.pos,"\t",g.nuc,"\t",g.prob,"\t!\n"
         end
+        # Don't write stop - it is the next start
         # restart search from the next probable SNP
         start = stop
         list = []
         stop = nil
       else
-        start = g
+        start = stop
+        list = []
       end
     else
-      # Low prob SNP
-      if start
-        list << g
-      end
+      list << g 
     end
   end
 end
 
 endwtime = MPI.wtime()
-$stderr.print "\n#{$message_count} messages; wallclock time of #{pid} = #{endwtime-startwtime}\n"
+$stderr.print "\n#{$message_count} messages; #{$match_count} matches; wallclock time of #{pid} = #{endwtime-startwtime}\n"
 
 $destinations.each do | p |
   dest_pid = p + individuals
   dest_individual = p + 1
-  $stderr.print "\nSending QUIT from #{pid} to #{dest_pid}" if VERBOSE
-  MPI::Comm::WORLD.send("QUIT", dest_pid, dest_individual) 
+  if num_processes > 1
+    $stderr.print "\nSending QUIT from #{pid} to #{dest_pid}" if VERBOSE
+    MPI::Comm::WORLD.send("QUIT", dest_pid, dest_individual) 
+  end
 end
 
 

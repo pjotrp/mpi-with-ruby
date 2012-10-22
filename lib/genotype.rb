@@ -18,6 +18,10 @@ class Genotype
     @prob ||= @s_prob.to_f
   end
 
+  def info
+    @s_prob+nuc
+  end
+
   def to_s
     "#{@s_idx} #{@s_pos} #{nuc} #{@s_prob}"
   end
