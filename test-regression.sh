@@ -7,7 +7,7 @@ else
   shift
 fi
 
-cp test/regression/input/* test/data
+# cp test/regression/input/* test/data
 
 rvm use 1.8.7
 
