@@ -37,6 +37,7 @@ table is a simple (growing) file.
 * Test MPI performance on single machine (done)
 * Simulate SNP distances (done)
 * Scoring in the haplotype responder (done)
+* Use larger MPI messages
 * Use sambamba snpcaller with MPI Ruby 
 * The same, but now on the cluster
 * Test MPI performance on cluster

@@ -14,8 +14,11 @@ VERBOSE = false
 DO_SPLIT = true
 SPLIT_SIZE = 300
 PROB_THRESHOLD = 0.5
+MIN_MESSAGE_SIZE = 0 # set to 0 for all messages
 MPI_ANY_SOURCE = -1  # from /usr/lib/openmpi/include/mpi.h
 MPI_ANY_TAG    = -1  # from /usr/lib/openmpi/include/mpi.h
+
+$message_count = 0
 
 pid = MPI::Comm::WORLD.rank()   # the rank of the MPI process
 num_processes = MPI::Comm::WORLD.size()    # the number of processes
@@ -53,8 +56,10 @@ def broadcast_for_haplotype num_processes, pid, individuals, individual, start, 
     puts "Waiting pid #{pid} for #{dest_pid} (tag #{dest_individual})" if VERBOSE
     msg,status = MPI::Comm::WORLD.recv(dest_pid, dest_individual)
     puts "Received by pid #{pid} from #{dest_pid} (tag #{dest_individual})" if VERBOSE
+    $message_count += 1
     if msg == "MATCH!"
       # Another haplotype matches our SNPs
+      print "!"
       return true
     end
   end
@@ -77,8 +82,8 @@ GenomeSection::each(f,DO_SPLIT,SPLIT_SIZE,PROB_THRESHOLD) do | genome_section |
     # $stderr.print "." if i % 100 == 0
     break if g == :eof
     next if g.nuc == 'x'  # note that not all nuc positions will be added
-    if g.prob > PROB_THRESHOLD
-      # High prob SNP
+    if g.prob > PROB_THRESHOLD and list.size >= MIN_MESSAGE_SIZE
+      # High prob SNP, we send out a broadcast
       if start and list.size > 0
         # We have a list of SNPs!
         stop = g
@@ -107,7 +112,7 @@ GenomeSection::each(f,DO_SPLIT,SPLIT_SIZE,PROB_THRESHOLD) do | genome_section |
 end
 
 endwtime = MPI.wtime()
-$stderr.print "\nwallclock time of #{pid} = #{endwtime-startwtime}\n"
+$stderr.print "\n#{$message_count} messages; wallclock time of #{pid} = #{endwtime-startwtime}\n"
 
 $destinations.each do | p |
   dest_pid = p + individuals
