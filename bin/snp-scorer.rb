@@ -77,7 +77,7 @@ def broadcast_for_haplotype num_processes, pid, individuals, individual, start, 
         if not final[pos] 
           final[pos] = h.dup
         elsif final[pos].prob < h.prob
-          final[pos].set_prob((h.prob + final[pos].prob)/2)
+          final[pos].set_prob([h.prob,final[pos].prob].max)
         end
       end
     end
