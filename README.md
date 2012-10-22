@@ -89,10 +89,13 @@ dropped JSON and changed the scoring algorithm, fixed some bugs
 * 4 cores,  8 individuals ~ wallclock time 0.58s
 * 4 cores, 16 individuals ~ wallclock time 2.87s
 
-Other tuning:
+other tuning:
 
 * Adding "-mca yield_when_idle 1" slows things down significantly (on a single 4-core Linux 3.2.0 box). Still need to test that on a cluster.
 * When moving Kernel::select after an empty f.gets, 10% gets knocked off - that is the default now
+* We can reduce the number of queries to X supporting haplotypes
+* Combine MPI messages
+
 
 # Install
 

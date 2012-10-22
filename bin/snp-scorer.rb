@@ -64,6 +64,7 @@ def broadcast_for_haplotype num_processes, pid, individuals, individual, start, 
   # haplotype probabilities
   if results.size > 0
     final = {}
+    # FIXME count matches on index, and score
     results.each do | result |
       result.each do | h |
         pos = h.pos
