@@ -6,10 +6,7 @@ module FileReader
       s = f.gets 
       if s != nil
         # We got a string of data
-        if s.strip == "End"
-          yield :eof
-          return
-        end
+        return if s.strip == "End"
         yield s 
       else
         # We are moving too fast

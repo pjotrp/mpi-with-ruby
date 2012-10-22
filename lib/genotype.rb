@@ -44,7 +44,6 @@ class Genotype
   end
 
   def == other
-    # return false if other == :eof
     self.pos == other.pos and self.nuc == other.nuc
   end
 end

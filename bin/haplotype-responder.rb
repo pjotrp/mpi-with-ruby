@@ -3,7 +3,7 @@ $: << './lib'
 require "parseline"
 
 VERBOSE = false
-DO_SPLIT = false      # Read input file in split fashion
+DO_SPLIT = true      # Read input file in split fashion
 PROB_THRESHOLD = 0.5
 MPI_ANY_SOURCE = -1  # from /usr/lib/openmpi/include/mpi.h
 MPI_ANY_TAG    = -1  # from /usr/lib/openmpi/include/mpi.h
@@ -31,12 +31,13 @@ def match seq, list
   if start_idx
     # print "\nAnchor start #{start}!"
     stop = list.last
-    stop_idx = seq.index { |g| g == stop } 
+    stop_idx = seq.rindex { |g| g == stop } 
     if stop_idx
       # print "\nAnchor stop #{stop}!"
       # We have anchors!
       subseq = seq[start_idx+1..stop_idx-1]
       sublist = list[1..-2]
+      raise "Problem" if sublist.size == 0 or sublist.size != list.size-2
       subseq.each do |h| 
         list.each do |g|
           result << h if h == g and h.prob > PROB_THRESHOLD
@@ -66,6 +67,7 @@ def handle_responder pid,f,individual,individuals
     if $snp_cache.size ==0 or end_pos > $snp_cache.last.pos 
       # continue filling the cache, until we have reached the right section
       ParseLine::tail_each_genotype(f) do | g |
+        # puts g
         $snp_cache << g
         break if end_pos <= g.pos and !DO_SPLIT
       end
