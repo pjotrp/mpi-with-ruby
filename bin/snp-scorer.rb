@@ -65,10 +65,10 @@ def broadcast_for_haplotype num_processes, pid, individuals, individual, start, 
       results << GenotypeSerialize::deserialize(msg)
     end
   end
-  # Calculate the new probabilities by combining all results
+  # Calculate the new probabilities by combining all results and averaging 
+  # haplotype probabilities
   if results.size > 0
     final = {}
-    list = []
     results.each do | result |
       result.each do | h |
         pos = h.pos
@@ -79,7 +79,7 @@ def broadcast_for_haplotype num_processes, pid, individuals, individual, start, 
         end
       end
     end
-    final.map { |k,v| v }
+    final.map { |k,v| v }  # flatten to array
   else 
     []
   end
@@ -109,6 +109,9 @@ GenomeSection::each(f,DO_SPLIT,SPLIT_SIZE,ANCHOR_PROB_THRESHOLD) do | genome_sec
         $message_count += 1
         # write SNPs to output file
         outf.print start.pos,"\t",start.nuc,"\t",start.prob,"\tA\n"
+        # list.each do | g |
+        #   outf.print g.pos,"\t",g.nuc,"\t",g.prob,"\tF\n"
+        # end
         result.each do | g |
           outf.print g.pos,"\t",g.nuc,"\t",g.prob,"\t!\n"
         end
