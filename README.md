@@ -82,13 +82,12 @@ added SNP position based search is more 'complicated'
 * 4 cores,  8 individuals ~ wallclock time 0.53s
 * 4 cores, 16 individuals ~ wallclock time 3.33s
 
-dropped JSON and changed the scoring algorithm (having the haplotype
-reader read the whole file keeps above timings)
+dropped JSON and changed the scoring algorithm, fixed some bugs
 
-* 4 cores,  2 individuals ~ wallclock time 0.06s
-* 4 cores,  4 individuals ~ wallclock time 0.39s
-* 4 cores,  8 individuals ~ wallclock time 0.53s
-* 4 cores, 16 individuals ~ wallclock time 3.33s
+* 4 cores,  2 individuals ~ wallclock time 0.03s
+* 4 cores,  4 individuals ~ wallclock time 0.18s
+* 4 cores,  8 individuals ~ wallclock time 0.58s
+* 4 cores, 16 individuals ~ wallclock time 2.87s
 
 Other tuning:
 
