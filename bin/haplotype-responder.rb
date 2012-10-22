@@ -3,7 +3,7 @@ $: << './lib'
 require "parseline"
 
 VERBOSE = false
-DO_SPLIT = true
+DO_SPLIT = false     # Read input file in split fashion
 PROB_THRESHOLD = 0.5
 MPI_ANY_SOURCE = -1  # from /usr/lib/openmpi/include/mpi.h
 MPI_ANY_TAG    = -1  # from /usr/lib/openmpi/include/mpi.h
@@ -22,7 +22,6 @@ $snp_cache = []  # global cache
 $quit_messages = [] 
 
 def match seq, list
-  # p ["*",seq, list]
   result = []
   # We found the overlapping SNP positions in seq. Now assert we have a haplotype
   # and return overlapping SNPs
@@ -30,11 +29,11 @@ def match seq, list
   start = list.first
   start_idx = seq.index { |g| g == start } 
   if start_idx
-    print "\nAnchor start #{start}!"
+    # print "\nAnchor start #{start}!"
     stop = list.last
     stop_idx = seq.index { |g| g == stop } 
     if stop_idx
-      print "\nAnchor stop #{stop}!"
+      # print "\nAnchor stop #{stop}!"
       # We have anchors!
       subseq = seq[start_idx+1..stop_idx-1]
       sublist = list[1..-2]
@@ -52,10 +51,10 @@ end
 def handle_responder pid,f,individual,individuals
   msg,status = MPI::Comm::WORLD.recv(MPI_ANY_SOURCE, individual)
   source_pid = status.source
-  tag = status.tag
+  # raise "Problem" if status.tag != individual
+  tag = status.tag # i.e. tag = individual
   if msg == "QUIT" 
     $quit_messages << source_pid
-    # $stderr.print "\nReceived QUIT by #{pid} from #{source_pid}"
     if $quit_messages.size == individuals - 1
       $stderr.print "\nExiting #{pid}" if VERBOSE
       exit 0
@@ -64,11 +63,11 @@ def handle_responder pid,f,individual,individuals
     list = GenotypeSerialize::deserialize(msg)
     current_pos = list.first.pos
     end_pos = list.last.pos
-    if $snp_cache.size ==0 or current_pos > $snp_cache.last.pos 
+    if $snp_cache.size ==0 or end_pos > $snp_cache.last.pos 
       # continue filling the cache, until we have reached the right section
       ParseLine::tail_each_genotype(f) do | g |
         $snp_cache << g
-        break if current_pos <= g.pos
+        break if end_pos <= g.pos and !DO_SPLIT
       end
     end
     # find first and last item in cache, starting from the tail

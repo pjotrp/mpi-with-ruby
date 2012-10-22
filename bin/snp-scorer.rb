@@ -21,6 +21,7 @@ MPI_ANY_TAG    = -1  # from /usr/lib/openmpi/include/mpi.h
 
 $message_count = 0
 $match_count = 0
+$snp_count = 0
 
 pid = MPI::Comm::WORLD.rank()   # the rank of the MPI process
 num_processes = MPI::Comm::WORLD.size()    # the number of processes
@@ -36,6 +37,7 @@ print "Rank #{pid} out of #{num_processes} processes (#{filen})\n" if VERBOSE
 # Destination haplotype responders - we randomize the list not to hit the same
 # nodes at once
 $destinations = (0..individuals-1).to_a.sort{ rand() - 0.5 } - [pid]
+# $destinations = [0,1,2,3] - [pid]
 
 # We broadcast for a range of matching SNPs. The start genotype and the stop genotype
 # are the first and last SNPs. middle contains the ones in the middle.
@@ -127,11 +129,12 @@ GenomeSection::each(f,DO_SPLIT,SPLIT_SIZE,ANCHOR_PROB_THRESHOLD) do | genome_sec
     else
       list << g if g.prob > FLOAT_PROB_THRESHOLD
     end
+    $snp_count += 1
   end
 end
 
 endwtime = MPI.wtime()
-$stderr.print "\n#{$message_count} messages; #{$match_count} matches; wallclock time of #{pid} = #{endwtime-startwtime}\n"
+$stderr.print "\n#{$message_count} messages; #{$match_count} matches (#{$match_count*100/$snp_count}%); wallclock time of #{pid} = #{endwtime-startwtime}\n"
 
 $destinations.each do | p |
   dest_pid = p + individuals
