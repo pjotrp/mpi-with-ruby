@@ -3,7 +3,7 @@ $: << './lib'
 require "parseline"
 
 VERBOSE = false
-DO_SPLIT = true      # Read input file in split fashion
+DO_SPLIT = false      # Read input file in split fashion
 PROB_THRESHOLD = 0.5
 MPI_ANY_SOURCE = -1  # from /usr/lib/openmpi/include/mpi.h
 MPI_ANY_TAG    = -1  # from /usr/lib/openmpi/include/mpi.h

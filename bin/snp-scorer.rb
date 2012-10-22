@@ -49,7 +49,7 @@ def broadcast_for_haplotype num_processes, pid, individuals, individual, start, 
   # nucs  = [ start.nuc, middle.map { |g| g.nuc }, stop.nuc ]
   # probs = [ start.prob, middle.map { |g| g.prob }, stop.prob ]
   send_msg = GenotypeSerialize::serialize([start]+middle+[stop])
-  p send_msg
+  # p send_msg
 
   results = []
   $destinations.each do | p |
@@ -62,7 +62,7 @@ def broadcast_for_haplotype num_processes, pid, individuals, individual, start, 
     msg,status = MPI::Comm::WORLD.recv(dest_pid, dest_individual)
     puts "Received by pid #{pid} from #{dest_pid} (tag #{dest_individual})" if VERBOSE
     if msg != "NOMATCH!"
-      print "!",msg
+      # print "!",msg
       $match_count += 1
       results << GenotypeSerialize::deserialize(msg)
     end
@@ -106,7 +106,7 @@ GenomeSection::each(f,DO_SPLIT,SPLIT_SIZE,ANCHOR_PROB_THRESHOLD) do | genome_sec
       stop = g
       if start and list.size > 0 
         # We have a list of SNPs!
-        p [ pid, start.pos, start.info,list.map { |g| g.info },stop.info ]
+        # p [ pid, start.pos, start.info,list.map { |g| g.info },stop.info ]
         result = broadcast_for_haplotype(num_processes,pid,individuals,individual,start,list,stop)
         $message_count += 1
         # write SNPs to output file
