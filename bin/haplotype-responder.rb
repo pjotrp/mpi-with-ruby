@@ -67,7 +67,7 @@ def handle_responder pid,f,individual,individuals
     if $snp_cache.size ==0 or end_pos > $snp_cache.last.pos 
       # continue filling the cache, until we have reached the right section
       ParseLine::tail_each_genotype(f) do | g |
-        puts "["+g.to_s+"]"
+        # puts "["+g.to_s+"]"
         $snp_cache << g
         if DO_SPLIT
           break if g.pos >= end_pos
