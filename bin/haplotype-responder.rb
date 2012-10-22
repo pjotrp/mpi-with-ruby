@@ -3,7 +3,7 @@ $: << './lib'
 require "parseline"
 
 VERBOSE = false
-DO_SPLIT = true      # Read input file in split fashion
+DO_SPLIT = false      # Read input file in split fashion
 PROB_THRESHOLD = 0.5
 MPI_ANY_SOURCE = -1  # from /usr/lib/openmpi/include/mpi.h
 MPI_ANY_TAG    = -1  # from /usr/lib/openmpi/include/mpi.h
@@ -37,7 +37,7 @@ def match seq, list
       # We have anchors!
       subseq = seq[start_idx+1..stop_idx-1]
       sublist = list[1..-2]
-      raise "Problem" if sublist.size == 0 or sublist.size != list.size-2
+      # raise "Problem" if sublist.size == 0 or sublist.size != list.size-2
       subseq.each do |h| 
         list.each do |g|
           result << h if h == g and h.prob > PROB_THRESHOLD
@@ -52,8 +52,7 @@ end
 def handle_responder pid,f,individual,individuals
   msg,status = MPI::Comm::WORLD.recv(MPI_ANY_SOURCE, individual)
   source_pid = status.source
-  # raise "Problem" if status.tag != individual
-  tag = status.tag # i.e. tag = individual
+  tag = status.tag # i.e. same as tag = individual
   if msg == "QUIT" 
     $quit_messages << source_pid
     if $quit_messages.size == individuals - 1
@@ -67,7 +66,7 @@ def handle_responder pid,f,individual,individuals
     if $snp_cache.size ==0 or end_pos > $snp_cache.last.pos 
       # continue filling the cache, until we have reached the right section
       ParseLine::tail_each_genotype(f) do | g |
-        puts "["+g.to_s+"]"
+        # puts "["+g.to_s+"]"
         $snp_cache << g
         if DO_SPLIT
           break if g.pos >= end_pos

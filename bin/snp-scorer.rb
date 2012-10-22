@@ -37,19 +37,12 @@ print "Rank #{pid} out of #{num_processes} processes (#{filen})\n" if VERBOSE
 # Destination haplotype responders - we randomize the list not to hit the same
 # nodes at once
 $destinations = (0..individuals-1).to_a.sort{ rand() - 0.5 } - [pid]
-# $destinations = [0,1,2,3] - [pid]
 
 # We broadcast for a range of matching SNPs. The start genotype and the stop genotype
 # are the first and last SNPs. middle contains the ones in the middle.
 #
 def broadcast_for_haplotype num_processes, pid, individuals, individual, start, middle, stop
-  # Prepare turning message into a string (serialize, here we use JSON)
-  # idxs  = [ start.idx, middle.map { |g| g.idx }, stop.idx ]  # cheating a bit for now
-  # poss  = [ start.pos, middle.map { |g| g.pos }, stop.pos ]
-  # nucs  = [ start.nuc, middle.map { |g| g.nuc }, stop.nuc ]
-  # probs = [ start.prob, middle.map { |g| g.prob }, stop.prob ]
   send_msg = GenotypeSerialize::serialize([start]+middle+[stop])
-  # p send_msg
 
   results = []
   $destinations.each do | p |
@@ -92,7 +85,6 @@ f = File.open(filen)
 
 # ---- Split genome on high scores, so we get a list of High - low+ - High. Broadcast
 #      each such genome - sorry for the iterative approach
-
 outf = File.open("snp#{pid+1}.tab","w")
 
 GenomeSection::each(f,DO_SPLIT,SPLIT_SIZE,ANCHOR_PROB_THRESHOLD) do | genome_section |
