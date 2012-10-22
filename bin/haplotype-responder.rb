@@ -18,9 +18,8 @@ individual = pid+1-individuals             # counting individuals from 1
 # ---- Read ind file
 filen="test/data/ind#{individual}.tab"
 print "Rank #{pid} out of #{num_processes} processes (responder #{filen})\n" if VERBOSE
-genome = []
 f = File.open(filen)
-$genome = []  # global cache
+$snp_cache = []  # global cache
 $quit_messages = [] 
 
 # The responder acts 'independently', receiving messages and responding to queries
@@ -47,13 +46,13 @@ def handle_responder pid,f,individual,individuals
       start_prob, list_prob, end_prob = probs
       # Do we have matching sequence?
       # First make sure the reader has gotten to this point... FIXME - this stops all
-      if end_idx > $genome.size-1
+      if end_idx > $snp_cache.size-1
         ParseLine::tail_each_genotype(f) do | g |
-          $genome << g
-          break if DO_SPLIT and end_idx <= $genome.size-1
+          $snp_cache << g
+          break if DO_SPLIT and end_idx <= $snp_cache.size-1
         end
       end
-      seq = $genome[start_idx..end_idx]
+      seq = $snp_cache[start_idx..end_idx]
       if seq.first.nuc == start and seq.last.nuc == stop and seq.first.prob > PROB_THRESHOLD and seq.last.prob > PROB_THRESHOLD
         if VERBOSE
           $stderr.print "\nWe may have a match for #{source_pid} from #{pid}!" 

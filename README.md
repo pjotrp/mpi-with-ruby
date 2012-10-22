@@ -44,7 +44,7 @@ table is a simple (growing) file.
 
 # mpi-ruby bug(s)
 
-I found is that mpi-ruby contains a nasty bug. The MPI
+I found that mpi-ruby contains a nasty bug. The MPI
 send command does not initialize the buffer size. Another catch is
 that the number of MPI messages is double that what it should be - as
 the (uninitialized!) buffer size is sent as message separately. On a
