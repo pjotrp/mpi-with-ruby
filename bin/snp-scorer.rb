@@ -13,7 +13,8 @@ require "genome_section"
 VERBOSE = false
 DO_SPLIT = true      # split the input file - to start up quicker
 SPLIT_SIZE = 300
-PROB_THRESHOLD = 0.5
+ANCHOR_PROB_THRESHOLD = 0.5
+FLOAT_PROB_THRESHOLD  = 0.1
 MIN_MESSAGE_SIZE = 0 # set to 0 for all messages
 MPI_ANY_SOURCE = -1  # from /usr/lib/openmpi/include/mpi.h
 MPI_ANY_TAG    = -1  # from /usr/lib/openmpi/include/mpi.h
@@ -52,21 +53,18 @@ def broadcast_for_haplotype num_processes, pid, individuals, individual, start, 
     dest_individual = p + 1
     puts "Sending idx #{start.idx} from #{pid} to #{dest_pid} (tag #{dest_individual})" if VERBOSE
     # We use a *blocking* send. After completion we can calculate the new probabilities
-    # Non-blocking looks interesting, but actually won't help because we are in a lock-step
-    # scoring process anyway
     message = [poss,nucs,probs].to_json
-    if num_processes > 1
-      MPI::Comm::WORLD.send(message, dest_pid, dest_individual) 
-      puts "Waiting pid #{pid} for #{dest_pid} (tag #{dest_individual})" if VERBOSE
-      msg,status = MPI::Comm::WORLD.recv(dest_pid, dest_individual)
-      puts "Received by pid #{pid} from #{dest_pid} (tag #{dest_individual})" if VERBOSE
-    end
+    MPI::Comm::WORLD.send(message, dest_pid, dest_individual) 
+    puts "Waiting pid #{pid} for #{dest_pid} (tag #{dest_individual})" if VERBOSE
+    msg,status = MPI::Comm::WORLD.recv(dest_pid, dest_individual)
+    puts "Received by pid #{pid} from #{dest_pid} (tag #{dest_individual})" if VERBOSE
     if msg == "MATCH!"
-      # Another haplotype matches our SNPs
+      print "!"
       $match_count += 1
       result << middle
     end
   end
+  # Calculate the new probabilities FIXME
   if result.size > 0
     middle
   else 
@@ -82,14 +80,14 @@ f = File.open(filen)
 
 outf = File.open("snp#{pid+1}.tab","w")
 
-GenomeSection::each(f,DO_SPLIT,SPLIT_SIZE,PROB_THRESHOLD) do | genome_section |
+GenomeSection::each(f,DO_SPLIT,SPLIT_SIZE,ANCHOR_PROB_THRESHOLD) do | genome_section |
   start = nil
   list  = []
   stop  = nil
   genome_section.each do | g |
     break if g == :eof
     next if g.nuc == 'x'  # note that not all nuc positions will be added
-    if g.prob > PROB_THRESHOLD
+    if g.prob > ANCHOR_PROB_THRESHOLD
       # High prob SNP, so we can send out a broadcast
       stop = g
       if start and list.size > 0 
@@ -112,7 +110,7 @@ GenomeSection::each(f,DO_SPLIT,SPLIT_SIZE,PROB_THRESHOLD) do | genome_section |
         list = []
       end
     else
-      list << g 
+      list << g if g.prob > FLOAT_PROB_THRESHOLD
     end
   end
 end
