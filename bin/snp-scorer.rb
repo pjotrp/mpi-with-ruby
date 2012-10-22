@@ -37,10 +37,10 @@ $destinations = (0..individuals-1).to_a.sort{ rand() - 0.5 } - [pid]
 #
 def broadcast_for_haplotype num_processes, pid, individuals, individual, start, middle, stop
   # Prepare turning message into a string (serialize, here we use JSON)
+  idxs  = [ start.idx, middle.map { |g| g.idx }, stop.idx ]  # cheating a bit for now
+  poss  = [ start.pos, middle.map { |g| g.pos }, stop.pos ]
   nucs  = [ start.nuc, middle.map { |g| g.nuc }, stop.nuc ]
   probs = [ start.prob, middle.map { |g| g.prob }, stop.prob ]
-  poss  = [ start.pos, middle.map { |g| g.pos }, stop.pos ]
-  idxs  = [ start.idx, middle.map { |g| g.idx }, stop.idx ]  # cheating a bit for now
 
   $destinations.each do | p |
     dest_pid = p + individuals
