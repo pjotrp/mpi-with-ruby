@@ -73,6 +73,14 @@ the stack
 * 4 cores,  8 individuals ~ wallclock time 0.41s
 * 4 cores, 16 individuals ~ wallclock time 1.44s
 
+added SNP position based search is more 'complicated'
+
+* 4 cores,  2 individuals ~ wallclock time 0.03s
+* 4 cores,  4 individuals ~ wallclock time 0.09s
+* 4 cores,  8 individuals ~ wallclock time 0.53s
+* 4 cores, 16 individuals ~ wallclock time 3.78s
+
+
 Other tuning:
 
 * Adding "-mca yield_when_idle 1" slows things down significantly (on a single 4-core Linux 3.2.0 box). Still need to test that on a cluster.

@@ -64,6 +64,10 @@ def handle_responder pid,f,individual,individuals
     # find first item from the tail
     first = $snp_cache.rindex { |g| g.pos <= start_pos }
     last  = $snp_cache.rindex { |g| g.pos >= end_pos }
+    if first==nil or last==nil
+      MPI::Comm::WORLD.send("NOMATCH!", source_pid, tag) 
+      return
+    end
     seq = $snp_cache[first..last]
     if seq.first.nuc == start and seq.last.nuc == stop and seq.first.prob > PROB_THRESHOLD and seq.last.prob > PROB_THRESHOLD
       if VERBOSE
