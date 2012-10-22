@@ -10,7 +10,7 @@ require "json"
 require "parseline"
 require "genome_section"
 
-VERBOSE = true
+VERBOSE = false
 DO_SPLIT = true
 SPLIT_SIZE = 300
 PROB_THRESHOLD = 0.5
