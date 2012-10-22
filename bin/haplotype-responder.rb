@@ -1,6 +1,5 @@
 $: << './lib'
 
-require "json"
 require "parseline"
 
 VERBOSE = false
@@ -22,6 +21,33 @@ f = File.open(filen)
 $snp_cache = []  # global cache
 $quit_messages = [] 
 
+def match seq, list
+  # p ["*",seq, list]
+  result = []
+  # We found the overlapping SNP positions in seq. Now assert we have a haplotype
+  # and return overlapping SNPs
+  # Does seq contain start?
+  start = list.first
+  start_idx = seq.index { |g| g == start } 
+  if start_idx
+    print "\nAnchor start #{start}!"
+    stop = list.last
+    stop_idx = seq.index { |g| g == stop } 
+    if stop_idx
+      print "\nAnchor stop #{stop}!"
+      # We have anchors!
+      subseq = seq[start_idx+1..stop_idx-1]
+      sublist = list[1..-2]
+      subseq.each do |h| 
+        list.each do |g|
+          result << h if h == g and h.prob > PROB_THRESHOLD
+        end
+      end
+    end
+  end
+  result
+end
+
 # The responder acts 'independently', receiving messages and responding to queries
 def handle_responder pid,f,individual,individuals
   msg,status = MPI::Comm::WORLD.recv(MPI_ANY_SOURCE, individual)
@@ -35,59 +61,33 @@ def handle_responder pid,f,individual,individuals
       exit 0
     end
   else
-    # unpack info
-    positions, list1, probs = JSON.parse(msg)
-    # start_idx, list_idx, end_idx = idxs
-    start_pos, list_pos, end_pos = positions
-    start, list, stop = list1
-    start_prob, list_prob, end_prob = probs
-    # Do we have matching sequence?
-    # First make sure the reader has gotten to this point... FIXME - this stops all
-    # if end_idx > $snp_cache.size-1
-    #   ParseLine::tail_each_genotype(f) do | g |
-    #     $snp_cache << g
-    #     break if DO_SPLIT and end_idx <= $snp_cache.size-1
-    #   end
-    # end
-    current_pos = end_pos
+    list = GenotypeSerialize::deserialize(msg)
+    current_pos = list.first.pos
+    end_pos = list.last.pos
     if $snp_cache.size ==0 or current_pos > $snp_cache.last.pos 
-      # keep filling the cache, until we have reached the right section
+      # continue filling the cache, until we have reached the right section
       ParseLine::tail_each_genotype(f) do | g |
-        if g == :eof
-          MPI::Comm::WORLD.send("NOMATCH!", source_pid, tag) 
-          return
-        end
         $snp_cache << g
         break if current_pos <= g.pos
       end
     end
-    # find first item from the tail
-    first = $snp_cache.rindex { |g| g.pos <= start_pos }
+    # find first and last item in cache, starting from the tail
+    first = $snp_cache.rindex { |g| g.pos <= current_pos }
     last  = $snp_cache.rindex { |g| g.pos >= end_pos }
     if first==nil or last==nil
       MPI::Comm::WORLD.send("NOMATCH!", source_pid, tag) 
       return
     end
     seq = $snp_cache[first..last]
-    if seq.first.nuc == start and seq.last.nuc == stop and seq.first.prob > PROB_THRESHOLD and seq.last.prob > PROB_THRESHOLD
-      if VERBOSE
-        $stderr.print "\nWe may have a match for #{source_pid} from #{pid}!" 
-        $stderr.print "\nResponding to #{source_pid} (tag #{individual})"
-      end
-      middle_seq = seq[1..-2]
-      middle_seq.each_with_index do | g, i |
-        if g.nuc != list[i] or g.prob < PROB_THRESHOLD
-          # $stderr.print "\nWe have NO match!"
-          MPI::Comm::WORLD.send("NOMATCH!", source_pid, tag) 
-          return
-        end
-      end
+    result = match(seq,list)
+    if result.size > 0
       print "\nWe have a match!" if VERBOSE
-      MPI::Comm::WORLD.send("MATCH!", source_pid, tag) 
-      return
+      send_msg = GenotypeSerialize::serialize(result)
+      MPI::Comm::WORLD.send(send_msg, source_pid, tag) 
+    else
+      # $stderr.print "\nWe have NO match for #{source_pid} from #{pid}!"
+      MPI::Comm::WORLD.send("NOMATCH!", source_pid, tag) 
     end
-    # $stderr.print "\nWe have NO match for #{source_pid} from #{pid}!"
-    MPI::Comm::WORLD.send("NOMATCH!", source_pid, tag) 
   end
   $stderr.print "^" if VERBOSE
 end

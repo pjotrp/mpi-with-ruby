@@ -6,7 +6,7 @@
 
 $: << "./lib"
 
-require "json"
+# require "json"
 require "parseline"
 require "genome_section"
 
@@ -43,9 +43,11 @@ $destinations = (0..individuals-1).to_a.sort{ rand() - 0.5 } - [pid]
 def broadcast_for_haplotype num_processes, pid, individuals, individual, start, middle, stop
   # Prepare turning message into a string (serialize, here we use JSON)
   # idxs  = [ start.idx, middle.map { |g| g.idx }, stop.idx ]  # cheating a bit for now
-  poss  = [ start.pos, middle.map { |g| g.pos }, stop.pos ]
-  nucs  = [ start.nuc, middle.map { |g| g.nuc }, stop.nuc ]
-  probs = [ start.prob, middle.map { |g| g.prob }, stop.prob ]
+  # poss  = [ start.pos, middle.map { |g| g.pos }, stop.pos ]
+  # nucs  = [ start.nuc, middle.map { |g| g.nuc }, stop.nuc ]
+  # probs = [ start.prob, middle.map { |g| g.prob }, stop.prob ]
+  send_msg = GenotypeSerialize::serialize([start]+middle+[stop])
+  p send_msg
 
   result = []
   $destinations.each do | p |
@@ -53,20 +55,19 @@ def broadcast_for_haplotype num_processes, pid, individuals, individual, start, 
     dest_individual = p + 1
     puts "Sending idx #{start.idx} from #{pid} to #{dest_pid} (tag #{dest_individual})" if VERBOSE
     # We use a *blocking* send. After completion we can calculate the new probabilities
-    message = [poss,nucs,probs].to_json
-    MPI::Comm::WORLD.send(message, dest_pid, dest_individual) 
+    MPI::Comm::WORLD.send(send_msg, dest_pid, dest_individual) 
     puts "Waiting pid #{pid} for #{dest_pid} (tag #{dest_individual})" if VERBOSE
     msg,status = MPI::Comm::WORLD.recv(dest_pid, dest_individual)
     puts "Received by pid #{pid} from #{dest_pid} (tag #{dest_individual})" if VERBOSE
-    if msg == "MATCH!"
-      print "!"
+    if msg != "NOMATCH!"
+      print "!",msg
       $match_count += 1
-      result << middle
+      result << GenotypeSerialize::deserialize(msg)
     end
   end
   # Calculate the new probabilities FIXME
   if result.size > 0
-    middle
+    result.first
   else 
     []
   end
@@ -85,7 +86,6 @@ GenomeSection::each(f,DO_SPLIT,SPLIT_SIZE,ANCHOR_PROB_THRESHOLD) do | genome_sec
   list  = []
   stop  = nil
   genome_section.each do | g |
-    break if g == :eof
     next if g.nuc == 'x'  # note that not all nuc positions will be added
     if g.prob > ANCHOR_PROB_THRESHOLD
       # High prob SNP, so we can send out a broadcast
@@ -93,11 +93,11 @@ GenomeSection::each(f,DO_SPLIT,SPLIT_SIZE,ANCHOR_PROB_THRESHOLD) do | genome_sec
       if start and list.size > 0 
         # We have a list of SNPs!
         p [ pid, start.pos, start.info,list.map { |g| g.info },stop.info ]
-        list2 = broadcast_for_haplotype(num_processes,pid,individuals,individual,start,list,stop)
+        result = broadcast_for_haplotype(num_processes,pid,individuals,individual,start,list,stop)
         $message_count += 1
         # write SNPs to output file
         outf.print start.pos,"\t",start.nuc,"\t",start.prob,"\tA\n"
-        list2.each do | g |
+        result.each do | g |
           outf.print g.pos,"\t",g.nuc,"\t",g.prob,"\t!\n"
         end
         # Don't write stop - it is the next start

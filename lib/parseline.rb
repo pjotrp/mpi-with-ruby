@@ -18,7 +18,7 @@ module ParseLine
   def ParseLine::tail_each_genotype f
     tail_each_rec(f) do | rec |
       if rec == :eof
-        yield :eof
+        # yield :eof
         return
       end
       yield Genotype.new(rec)
