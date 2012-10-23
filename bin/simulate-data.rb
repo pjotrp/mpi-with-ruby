@@ -67,6 +67,6 @@ end
   print "." if j % 200 == 0
 end
 (0..individuals-1).each do | i |
-  f[i].print "End\n"
+  f[i].putc ?\C-d
 end
 print "\nDone\n"
