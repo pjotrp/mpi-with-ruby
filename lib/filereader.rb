@@ -7,6 +7,7 @@ module FileReader
       s = f.gets 
       if s != nil
         sleep_counter = 0
+        break if s.index(?\C-d) != nil
         s = s.chomp
         # We got a string of data
         break if s == "End"

@@ -4,8 +4,18 @@ class Genotype
   attr_reader :nuc
   def initialize rec = nil # , nuc=nil, prob=nil
     if rec
-      raise "Record size error #{rec.join(' ')}, size #{rec.size}" if rec.size != 6
-      @s_idx,@s_pos,@ref,@haplotype,@nuc,@s_prob = rec
+      size = rec.size
+      if size == 4
+        @style = :sambamba
+        # sambamba style "62944071", "T", "T,C", "13.3523"
+        @s_pos,@ref,nucs,@s_score = rec
+        @nuc = nucs.split(/,/) - [@ref]
+      elsif size == 6
+        @style = :native
+        @s_idx,@s_pos,@ref,@haplotype,@nuc,@s_prob = rec
+      else
+        raise "Record size error #{rec.join(' ')}, size #{rec.size}" 
+      end
     end
   end
 
@@ -18,7 +28,11 @@ class Genotype
   end
 
   def prob
-    @prob ||= @s_prob.to_f
+    if @style == :sambamba
+      @prob ||= 1-1.0/10**(@s_score.to_f/10)
+    else
+      @prob ||= @s_prob.to_f
+    end
   end
 
   def set_prob prob
@@ -31,7 +45,7 @@ class Genotype
   end
 
   def to_s
-    "#{@s_idx} #{@s_pos} #{nuc} #{@s_prob}"
+    "#{@s_idx} #{@s_pos} #{nuc} #{prob}"+(@s_score ? " "+@s_score : "") 
   end
 
   def serialize

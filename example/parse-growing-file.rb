@@ -6,7 +6,7 @@ $: << './lib'
 require 'parseline'
 
 File.open(ARGV[0]) do | f |
-  ParseLine::each_rec(f) do |rec|
+  ParseLine::tail_each_rec(f) do |rec|
     p rec 
   end
 end
