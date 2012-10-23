@@ -14,7 +14,7 @@ module FileReader
       else
         # We are moving too fast
         # $stderr.print "reader pause"
-        break if sleep_counter > 10
+        break if sleep_counter > 180*100 # break out after 3 minutes
         sleep_counter += 1
         sleep 0.01
         select([f]) #  <-- use when producer is slower than reader
