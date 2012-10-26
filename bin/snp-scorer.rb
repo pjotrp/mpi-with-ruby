@@ -19,7 +19,7 @@ if ARGV.size > 0
   outpath=ARGV.shift
 end
 
-VERBOSE = false
+VERBOSE = true
 DO_SPLIT = true      # split the input file - to start up quicker
 SPLIT_SIZE = 300
 ANCHOR_PROB_THRESHOLD = 0.5
@@ -143,6 +143,7 @@ GenomeSection::each(f,DO_SPLIT,SPLIT_SIZE,ANCHOR_PROB_THRESHOLD) do | genome_sec
         start = stop
         list = []
       end
+      outf.flush
     else
       list << g if g.prob > FLOAT_PROB_THRESHOLD
     end
