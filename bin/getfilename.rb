@@ -29,7 +29,7 @@ par_s="#{datafilen} #{ARGV.join(' ')}"
 
 if exec
   exec2 = exec.gsub(/FILENAME/,File::basename(datafilen)) 
-  $stderr.print "\nReading from #{fn} with divisor #{divide} and exec #{exec2}" 
+  $stderr.print "\nReading pid #{pid} from <#{fn}> with divisor <#{divide}> exec <#{exec2}>, and <#{par_s}>" 
   Kernel.system "#{exec2} #{par_s}"
 else
   print par_s
