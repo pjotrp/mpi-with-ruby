@@ -99,6 +99,7 @@ seconds = 0
 while not File.exist?(filen) and seconds < 120
   sleep 1
   seconds += 1
+  $stderr.print "Waiting for #{filen}" if sleep % 10 == 0 
 end
 
 # ---- Read ind file
