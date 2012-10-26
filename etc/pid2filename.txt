@@ -1,0 +1,16 @@
+test/data/ind1.tab
+test/data/ind2.tab
+test/data/ind3.tab
+test/data/ind4.tab
+test/data/ind5.tab
+test/data/ind6.tab
+test/data/ind7.tab
+test/data/ind8.tab
+test/data/ind9.tab
+test/data/ind10.tab
+test/data/ind11.tab
+test/data/ind12.tab
+test/data/ind13.tab
+test/data/ind14.tab
+test/data/ind15.tab
+test/data/ind16.tab

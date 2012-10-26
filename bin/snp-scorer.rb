@@ -10,6 +10,14 @@ $: << "./lib"
 require "parseline"
 require "genome_section"
 
+if ARGV.size > 0
+  basefn=ARGV.shift
+  divide=2
+  if par=ARGV.shift
+    divide = par.to_i
+  end
+end
+
 VERBOSE = false
 DO_SPLIT = true      # split the input file - to start up quicker
 SPLIT_SIZE = 300
@@ -31,7 +39,13 @@ individual = pid+1
 pid = 0 if pid == nil
 startwtime = MPI.wtime()
 
-filen="test/data/ind#{individual}.tab"
+if basefn
+  section_size = num_processes/divide
+  index = pid % section_size
+  filen=File.open(basefn).readlines[index].strip
+# else
+#  filen="test/data/ind#{individual}.tab"
+end
 print "Rank #{pid} out of #{num_processes} processes (#{filen})\n" if VERBOSE
 
 # Destination haplotype responders - we randomize the list not to hit the same
