@@ -2,6 +2,14 @@ $: << './lib'
 
 require "parseline"
 
+if ARGV.size > 0
+  basefn=ARGV.shift
+  divide=2
+  if par=ARGV.shift
+    divide = par.to_i
+  end
+end
+
 VERBOSE = false
 DO_SPLIT = true      # Read input file in split fashion
 PROB_THRESHOLD = 0.5
@@ -15,7 +23,13 @@ individuals = num_processes/2
 individual = pid+1-individuals             # counting individuals from 1
 
 # ---- Read ind file
-filen="test/data/ind#{individual}.tab"
+if basefn
+  section_size = num_processes/divide
+  index = pid % section_size
+  filen=File.open(basefn).readlines[index].strip
+# else
+#  filen="test/data/ind#{individual}.tab"
+end
 print "Rank #{pid} out of #{num_processes} processes (responder #{filen})\n" if VERBOSE
 f = File.open(filen)
 $snp_cache = []  # global cache
