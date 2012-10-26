@@ -28,9 +28,9 @@ datafilen=File.open(fn).readlines[index].strip
 par_s="#{datafilen} #{ARGV.join(' ')}"
 
 if exec
-  exec2 = exec.gsub(/FILENAME/,File::basename(datafilen)) 
-  $stderr.print "\nReading pid #{pid} from <#{fn}> with divisor <#{divide}> exec <#{exec2}>, and <#{par_s}>" 
-  Kernel.system "#{exec2} #{par_s}"
+  par_s2 = par_s.gsub(/FILENAME/,File::basename(datafilen)) 
+  $stderr.print "\nReading pid #{pid} from <#{fn}> with divisor <#{divide}> exec <#{exec}>, and <#{par_s2}>" 
+  Kernel.system "#{exec} #{par_s2}"
 else
   print par_s
 end
