@@ -16,7 +16,7 @@ if ARGV.size > 0
   if par=ARGV.shift
     divide = par.to_i
   end
-  outfilen=ARGV.shift
+  outpath=ARGV.shift
 end
 
 VERBOSE = false
@@ -105,7 +105,9 @@ end
 f = File.open(filen)
 
 outfilen = "snp#{pid+1}.tab" if not outfilen
-outfilen = ENV["TMPDIR"]+'/'+outfilen # always write to scratch
+if outpath
+  outfilen = outpath+'/'+outfilen
+end
 outf = File.open(outfilen,"w")
 
 # ---- Split genome on high scores, so we get a list of High - low+ - High. Broadcast
