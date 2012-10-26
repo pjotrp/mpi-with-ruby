@@ -28,6 +28,10 @@ datafilen=File.open(fn).readlines[index].strip
 par_s="#{datafilen} #{ARGV.join(' ')}"
 
 if exec
+  if exec =~ /FILENAME/
+    par_s=ARGV.join(' ')
+    exec = exec.gsub(/FILENAME/,File::basename(datafilen))
+  end
   par_s2 = par_s.gsub(/FILENAME/,File::basename(datafilen)) 
   $stderr.print "\nReading pid #{pid} from <#{fn}> with divisor <#{divide}> exec <#{exec}>, and <#{par_s2}>" 
   Kernel.system "#{exec} #{par_s2}"
