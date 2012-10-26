@@ -12,10 +12,10 @@ require "genome_section"
 
 if ARGV.size > 0
   basefn=ARGV.shift
-  divide=2
   if par=ARGV.shift
     divide = par.to_i
   end
+  divide=2 if not divide
   outpath=ARGV.shift
 end
 
