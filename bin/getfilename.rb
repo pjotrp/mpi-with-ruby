@@ -6,6 +6,8 @@
 # contains the base input file name (a BAM file), which is used for processing.
 # This list is 1/3rd the size of the number of processes. Process 0,1,2 should
 # get the same file, and 3,4,5 etc.
+#
+# One nicety is that all FILENAME fields will be replaced too. This can be used for output.
 
 $: << './lib'
 
@@ -22,9 +24,13 @@ num_processes = MPI::Comm::WORLD.size()    # the number of processes
 section_size = num_processes/divide
 index = pid % section_size
 
-par=File.open(fn).readlines[index].strip
+datafilen=File.open(fn).readlines[index].strip
+par_s="#{datafilen} #{ARGV.join(' ')}"
+
 if exec
-  Kernel.system "#{exec} #{par} #{ARGV.join(' ')}"
+  exec2 = exec.gsub(/FILENAME/,File::basename(datafilen)) 
+  $stderr.print "\nReading from #{fn} with divisor #{divide} and exec #{exec2}" 
+  Kernel.system "#{exec2} #{par_s}"
 else
-  print par
+  print par_s
 end
