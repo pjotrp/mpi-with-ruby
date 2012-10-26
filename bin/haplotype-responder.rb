@@ -30,6 +30,12 @@ if basefn
   filen=ENV["TMPDIR"]+"/"+filen+".snp1" if filen !~ /\.tab$/
 end
 print "Rank #{pid} out of #{num_processes} processes (responder #{filen})\n" if VERBOSE
+
+seconds = 0
+while not File.exist?(filen) and seconds < 120
+  sleep 1
+  seconds += 1
+end
 f = File.open(filen)
 $snp_cache = []  # global cache
 $quit_messages = [] 

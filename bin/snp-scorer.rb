@@ -95,6 +95,12 @@ def broadcast_for_haplotype num_processes, pid, individuals, individual, start, 
   end
 end
 
+seconds = 0
+while not File.exist?(filen) and seconds < 120
+  sleep 1
+  seconds += 1
+end
+
 # ---- Read ind file
 f = File.open(filen)
 
