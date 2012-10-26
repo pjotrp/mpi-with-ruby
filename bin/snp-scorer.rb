@@ -153,6 +153,7 @@ GenomeSection::each(f,DO_SPLIT,SPLIT_SIZE,ANCHOR_PROB_THRESHOLD) do | genome_sec
 end
 
 endwtime = MPI.wtime()
+$snp_count=1 if $snp_count==0
 $stderr.print "\n#{$message_count} messages; #{$match_count} matches (#{$match_count*100/$snp_count}%); wallclock time of #{pid} = #{endwtime-startwtime}\n"
 
 $destinations.each do | p |
