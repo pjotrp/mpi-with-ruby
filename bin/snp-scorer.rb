@@ -16,6 +16,7 @@ if ARGV.size > 0
   if par=ARGV.shift
     divide = par.to_i
   end
+  outfilen=ARGV.shift
 end
 
 VERBOSE = false
@@ -98,10 +99,12 @@ end
 # ---- Read ind file
 f = File.open(filen)
 
+outfilen = "snp#{pid+1}.tab" if not outfilen
+outfilen = ENV["TMPDIR"]+'/'+outfilen # always write to scratch
+outf = File.open(outfilen,"w")
+
 # ---- Split genome on high scores, so we get a list of High - low+ - High. Broadcast
 #      each such genome - sorry for the iterative approach
-outf = File.open("snp#{pid+1}.tab","w")
-
 GenomeSection::each(f,DO_SPLIT,SPLIT_SIZE,ANCHOR_PROB_THRESHOLD) do | genome_section |
   start = nil
   list  = []
