@@ -27,7 +27,7 @@ if basefn
   section_size = num_processes/divide
   index = pid % section_size
   filen=File.open(basefn).readlines[index].strip
-  filen=filen+".snp1" if filen !~ /\.tab$/
+  filen=ENV["TMPDIR"]+"/"+filen+".snp1" if filen !~ /\.tab$/
 end
 print "Rank #{pid} out of #{num_processes} processes (responder #{filen})\n" if VERBOSE
 f = File.open(filen)
