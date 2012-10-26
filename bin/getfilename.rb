@@ -34,7 +34,9 @@ if exec
   end
   par_s2 = par_s.gsub(/FILENAME/,File::basename(datafilen)) 
   $stderr.print "\nReading pid #{pid} from <#{fn}> with divisor <#{divide}> exec <#{exec}>, and <#{par_s2}>" 
-  Kernel.system "#{exec} #{par_s2}"
+  cmd = "#{exec} #{par_s2}"
+  $stderr.print "\n#{cmd}\n"
+  Kernel.system cmd
 else
   print par_s
 end
