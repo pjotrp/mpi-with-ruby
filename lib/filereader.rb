@@ -15,7 +15,9 @@ module FileReader
       else
         # We are moving too fast
         # $stderr.print "reader pause"
-        break if sleep_counter > 60*100 # break out after 60 seconds
+        if sleep_counter > 60*100 # break out after 60 seconds
+          $stderr.print "Waited 60 seconds for file to continue"
+        end
         sleep_counter += 1
         $stderr.print "W" if sleep_counter % 600 == 0
         sleep 0.01

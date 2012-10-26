@@ -18,18 +18,17 @@ MPI_ANY_TAG    = -1  # from /usr/lib/openmpi/include/mpi.h
 
 pid = MPI::Comm::WORLD.rank()              # the rank of the MPI process
 num_processes = MPI::Comm::WORLD.size()    # the number of processes
-individuals = num_processes/2
 
-individual = pid+1-individuals             # counting individuals from 1
+individuals        = num_processes/3
+relative_pid       = pid - 2*individuals
+individual         = relative_pid+1 
 
 # ---- Read ind file
 if basefn
-  section_size = num_processes/divide
-  index = pid % section_size
-  filen=File.open(basefn).readlines[index].strip
+  filen=File.open(basefn).readlines[relative_pid].strip
   filen=ENV["TMPDIR"]+"/"+filen+".snp1" if filen !~ /\.tab$/
 end
-print "Rank #{pid} out of #{num_processes} processes (responder #{filen})\n" if VERBOSE
+print "Rank #{pid} out of #{num_processes} processes ,individual #{individual} (responder #{filen})\n" if VERBOSE
 
 seconds = 0
 while not File.exist?(filen) and seconds < 120

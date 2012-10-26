@@ -16,10 +16,10 @@ if ARGV.size > 0
     divide = par.to_i
   end
   divide=2 if not divide
-  outpath=ARGV.shift
+  outdir=ARGV.shift
 end
 
-VERBOSE = true
+VERBOSE = false
 DO_SPLIT = true      # split the input file - to start up quicker
 SPLIT_SIZE = 300
 ANCHOR_PROB_THRESHOLD = 0.5
@@ -34,23 +34,35 @@ $snp_count = 0
 
 pid = MPI::Comm::WORLD.rank()   # the rank of the MPI process
 num_processes = MPI::Comm::WORLD.size()    # the number of processes
-individuals = num_processes/2
-individual = pid+1
+
+individuals        = num_processes/3
+relative_pid       = pid - individuals
+individual         = relative_pid+1 
 
 pid = 0 if pid == nil
 startwtime = MPI.wtime()
 
 if basefn
   section_size = num_processes/divide
-  index = pid % section_size
-  filen=File.open(basefn).readlines[index].strip
+  filen=File.open(basefn).readlines[relative_pid].strip
   filen=ENV["TMPDIR"]+"/"+filen+".snp1" if filen !~ /\.tab$/
 end
-print "Rank #{pid} out of #{num_processes} processes (#{filen})\n" if VERBOSE
+print "Pid #{pid} out of #{num_processes} processes, individual #{individual} (#{filen})\n" if VERBOSE
 
 # Destination haplotype responders - we randomize the list not to hit the same
 # nodes at once
-$destinations = (0..individuals-1).to_a.sort{ rand() - 0.5 } - [pid]
+$destinations = (0..individuals-1).to_a.sort{ rand() - 0.5 } - [relative_pid]
+$individuals = individuals
+
+p [relative_pid,pid,$destinations]
+
+def each_destination
+  $destinations.each do | p |
+    dest_pid = p + $individuals*2
+    dest_individual = p + 1
+    yield dest_pid, dest_individual
+  end
+end
 
 # We broadcast for a range of matching SNPs. The start genotype and the stop genotype
 # are the first and last SNPs. middle contains the ones in the middle.
@@ -59,9 +71,7 @@ def broadcast_for_haplotype num_processes, pid, individuals, individual, start, 
   send_msg = GenotypeSerialize::serialize([start]+middle+[stop])
 
   results = []
-  $destinations.each do | p |
-    dest_pid = p + individuals
-    dest_individual = p + 1
+  each_destination do | dest_pid, dest_individual |
     puts "Sending idx #{start.idx} from #{pid} to #{dest_pid} (tag #{dest_individual})" if VERBOSE
     # We use a *blocking* send. After completion we can calculate the new probabilities
     MPI::Comm::WORLD.send(send_msg, dest_pid, dest_individual) 
@@ -69,7 +79,7 @@ def broadcast_for_haplotype num_processes, pid, individuals, individual, start, 
     msg,status = MPI::Comm::WORLD.recv(dest_pid, dest_individual)
     puts "Received by pid #{pid} from #{dest_pid} (tag #{dest_individual})" if VERBOSE
     if msg != "NOMATCH!"
-      # print "!",msg
+      print "!",msg
       $match_count += 1
       results << GenotypeSerialize::deserialize(msg)
     end
@@ -99,16 +109,18 @@ seconds = 0
 while not File.exist?(filen) and seconds < 120
   sleep 1
   seconds += 1
-  $stderr.print "Waiting for #{filen}" if sleep % 10 == 0 
+  $stderr.puts "Waiting for #{filen}" 
 end
 
 # ---- Read ind file
+puts "Reading #{filen}"
 f = File.open(filen)
 
-outfilen = "snp#{pid+1}.tab" if not outfilen
-if outpath
-  outfilen = outpath+'/'+outfilen
+outfilen = "snp#{individual}.tab" if not outfilen
+if outdir
+  outfilen = outdir+'/'+outfilen
 end
+puts "Writing #{outfilen}"
 outf = File.open(outfilen,"w")
 
 # ---- Split genome on high scores, so we get a list of High - low+ - High. Broadcast
@@ -118,6 +130,7 @@ GenomeSection::each(f,DO_SPLIT,SPLIT_SIZE,ANCHOR_PROB_THRESHOLD) do | genome_sec
   list  = []
   stop  = nil
   genome_section.each do | g |
+    # p [pid,g.prob,ANCHOR_PROB_THRESHOLD,g.to_s]
     next if g.nuc == 'x'  # note that not all nuc positions will be added
     if g.prob > ANCHOR_PROB_THRESHOLD
       # High prob SNP, so we can send out a broadcast
@@ -156,9 +169,7 @@ endwtime = MPI.wtime()
 $snp_count=1 if $snp_count==0
 $stderr.print "\n#{$message_count} messages; #{$match_count} matches (#{$match_count*100/$snp_count}%); wallclock time of #{pid} = #{endwtime-startwtime}\n"
 
-$destinations.each do | p |
-  dest_pid = p + individuals
-  dest_individual = p + 1
+each_destination do | dest_pid, dest_individual |
   if num_processes > 1
     $stderr.print "\nSending QUIT from #{pid} to #{dest_pid}" if VERBOSE
     MPI::Comm::WORLD.send("QUIT", dest_pid, dest_individual) 
