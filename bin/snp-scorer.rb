@@ -44,8 +44,7 @@ if basefn
   section_size = num_processes/divide
   index = pid % section_size
   filen=File.open(basefn).readlines[index].strip
-# else
-#  filen="test/data/ind#{individual}.tab"
+  filen=filen+".snp1" if filen !~ /\.tab$/
 end
 print "Rank #{pid} out of #{num_processes} processes (#{filen})\n" if VERBOSE
 
