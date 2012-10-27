@@ -13,13 +13,16 @@ require "genome_section"
 if ARGV.size > 0
   basefn=ARGV.shift
   if par=ARGV.shift
-    divide = par.to_i
+    num_programs = par.to_i
   end
-  divide=2 if not divide
+  num_programs=3 if not num_programs  # usually we run mpi with the snpscorer and haplotype finder
   outdir=ARGV.shift
+else
+  print "Usage: snp-scorer.rb infile num_programs outdir"
+  exit 1
 end
 
-VERBOSE = false
+VERBOSE = true
 DO_SPLIT = true      # split the input file - to start up quicker
 SPLIT_SIZE = 300
 ANCHOR_PROB_THRESHOLD = 0.5
@@ -35,15 +38,15 @@ $snp_count = 0
 pid = MPI::Comm::WORLD.rank()   # the rank of the MPI process
 num_processes = MPI::Comm::WORLD.size()    # the number of processes
 
-individuals        = num_processes/3
-relative_pid       = pid - individuals
+individuals        = num_processes/num_programs
+relative_pid       = pid - individuals*(num_programs-2)
 individual         = relative_pid+1 
 
 pid = 0 if pid == nil
 startwtime = MPI.wtime()
 
 if basefn
-  section_size = num_processes/divide
+  # section_size = num_processes/num_programs
   filen=File.open(basefn).readlines[relative_pid].strip
   filen=ENV["TMPDIR"]+"/"+filen+".snp1" if filen !~ /\.tab$/
 end
@@ -53,12 +56,13 @@ print "Pid #{pid} out of #{num_processes} processes, individual #{individual} (#
 # nodes at once
 $destinations = (0..individuals-1).to_a.sort{ rand() - 0.5 } - [relative_pid]
 $individuals = individuals
+$num_programs = num_programs
 
 p [relative_pid,pid,$destinations]
 
 def each_destination
   $destinations.each do | p |
-    dest_pid = p + $individuals*2
+    dest_pid = p + $individuals*($num_programs-1)
     dest_individual = p + 1
     yield dest_pid, dest_individual
   end

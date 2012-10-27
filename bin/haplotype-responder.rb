@@ -4,13 +4,16 @@ require "parseline"
 
 if ARGV.size > 0
   basefn=ARGV.shift
-  divide=2
+  num_programs=3
   if par=ARGV.shift
-    divide = par.to_i
+    num_programs = par.to_i
   end
+else
+  print "Usage: haplotype-responder.rb infile num_programs"
+  exit 1
 end
 
-VERBOSE = false
+VERBOSE = true
 DO_SPLIT = true      # Read input file in split fashion
 PROB_THRESHOLD = 0.5
 MPI_ANY_SOURCE = -1  # from /usr/lib/openmpi/include/mpi.h
@@ -19,16 +22,17 @@ MPI_ANY_TAG    = -1  # from /usr/lib/openmpi/include/mpi.h
 pid = MPI::Comm::WORLD.rank()              # the rank of the MPI process
 num_processes = MPI::Comm::WORLD.size()    # the number of processes
 
-individuals        = num_processes/3
-relative_pid       = pid - 2*individuals
+individuals        = num_processes/num_programs
+relative_pid       = pid - (num_programs-1)*individuals
 individual         = relative_pid+1 
+p [pid,num_processes,num_programs,individuals, relative_pid, individual] if VERBOSE
 
 # ---- Read ind file
 if basefn
   filen=File.open(basefn).readlines[relative_pid].strip
   filen=ENV["TMPDIR"]+"/"+filen+".snp1" if filen !~ /\.tab$/
 end
-print "Rank #{pid} out of #{num_processes} processes ,individual #{individual} (responder #{filen})\n" if VERBOSE
+print "haplo: Pid #{pid} out of #{num_processes} processes ,individual #{individual} (responder #{filen})\n" if VERBOSE
 
 seconds = 0
 while not File.exist?(filen) and seconds < 120
