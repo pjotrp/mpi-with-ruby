@@ -43,6 +43,8 @@ f = File.open(filen)
 $snp_cache = []  # global cache
 $quit_messages = [] 
 
+# Score SNPs that have high confidence in this haplotype. Return the list of
+# probable SNPs
 def match seq, list
   result = []
   # We found the overlapping SNP positions in seq. Now assert we have a haplotype
@@ -107,7 +109,7 @@ def handle_responder pid,f,individual,individuals
       seq = $snp_cache[first..last]
       result << match(seq,list)
     end
-    result2 = result.flatten
+    result2 = result.flatten # list of probable SNPs
     if result2.size > 0
       print "\nWe have a match!" if VERBOSE
       send_msg = GenotypeSerialize::serialize(result2)
