@@ -73,9 +73,7 @@ $queue = []
 
 # Adds to the quere, and returns the size of the queue
 def queue_for_haplotype_calling start, middle, stop
-  # p [start.pos,middle.map{|g|g.pos},stop.pos]
   $queue << [start]+middle+[stop]
-  # p [$pid,"queue",$queue.flatten.map{|g|g.pos}]
   $queue.size
 end
 

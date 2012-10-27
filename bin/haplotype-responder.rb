@@ -102,16 +102,13 @@ def handle_responder pid,f,individual,individuals
       # find first and last item in cache, starting from the tail
       first = $snp_cache.rindex { |g| g.pos <= current_pos }
       last  = $snp_cache.rindex { |g| g.pos >= end_pos }
-      if first==nil or last==nil
-        MPI::Comm::WORLD.send("NOMATCH!", source_pid, tag) 
-        return
-      end
+      next if first==nil or last==nil
       seq = $snp_cache[first..last]
       result << match(seq,list)
     end
     result2 = result.flatten # list of probable SNPs
     if result2.size > 0
-      print "\nWe have a match!" if VERBOSE
+      print "\nWe have #{result2.size} matches!" if VERBOSE
       send_msg = GenotypeSerialize::serialize(result2)
       MPI::Comm::WORLD.send(send_msg, source_pid, tag) 
     else
