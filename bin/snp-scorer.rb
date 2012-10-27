@@ -27,7 +27,7 @@ DO_SPLIT = true      # split the input file - to start up quicker
 SPLIT_SIZE = 300     # somewhat arbitrary size
 ANCHOR_PROB_THRESHOLD = 0.5
 FLOAT_PROB_THRESHOLD  = 0.1
-MIN_MESSAGE_SIZE = 20 # set to 0 for all messages
+MIN_MESSAGE_SIZE = 0 # set to 0 for all messages
 MPI_ANY_SOURCE = -1  # from /usr/lib/openmpi/include/mpi.h
 MPI_ANY_TAG    = -1  # from /usr/lib/openmpi/include/mpi.h
 
@@ -57,6 +57,7 @@ print "Pid #{pid} out of #{num_processes} processes, individual #{individual} (#
 $destinations = (0..individuals-1).to_a.sort{ rand() - 0.5 } - [relative_pid]
 $individuals = individuals
 $num_programs = num_programs
+$pid = pid
 
 p [relative_pid,pid,$destinations]
 
@@ -72,7 +73,9 @@ $queue = []
 
 # Adds to the quere, and returns the size of the queue
 def queue_for_haplotype_calling start, middle, stop
-  $queue << [start]+middle+[stop]  
+  # p [start.pos,middle.map{|g|g.pos},stop.pos]
+  $queue << [start]+middle+[stop]
+  # p [$pid,"queue",$queue.flatten.map{|g|g.pos}]
   $queue.size
 end
 
@@ -86,15 +89,11 @@ end
 # are the first and last SNPs. middle contains the ones in the middle.
 #
 def broadcast_for_haplotype num_processes, pid, individuals, individual, queue
-  list = []
-  queue.each do | gs |
-    gs[0..-2].each do | g |
-      list << g
-    end
-  end
+  list = queue.flatten.uniq
+  # p ["send",list.map{|g|g.pos}]
 
-  send_msg = GenotypeSerialize::serialize_list(list)
-  p send_msg
+  send_msg = GenotypeSerialize::serialize(list)
+  # p ["send",send_msg]
 
   results = []
   start = list.first
@@ -176,10 +175,10 @@ GenomeSection::each(f,DO_SPLIT,SPLIT_SIZE,ANCHOR_PROB_THRESHOLD) do | genome_sec
               outf.print g.pos,"\t",g.nuc,"\t",g.prob,"\t!\n"
             end
           end
-          start = stop
-          list = []
-          stop = nil
         end
+        start = stop
+        list = []
+        stop = nil
       else
         start = stop
         list = []
