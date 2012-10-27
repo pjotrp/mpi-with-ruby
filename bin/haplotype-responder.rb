@@ -13,7 +13,7 @@ else
   exit 1
 end
 
-VERBOSE = true
+VERBOSE = false
 DO_SPLIT = true      # Read input file in split fashion
 PROB_THRESHOLD = 0.5
 MPI_ANY_SOURCE = -1  # from /usr/lib/openmpi/include/mpi.h

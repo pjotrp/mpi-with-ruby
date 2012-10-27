@@ -22,7 +22,7 @@ else
   exit 1
 end
 
-VERBOSE = true
+VERBOSE = false
 DO_SPLIT = true      # split the input file - to start up quicker
 SPLIT_SIZE = 300     # somewhat arbitrary size
 ANCHOR_PROB_THRESHOLD = 0.5
