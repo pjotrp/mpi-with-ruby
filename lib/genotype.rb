@@ -64,6 +64,7 @@ end
 
 module GenotypeSerialize
 
+  # List of genotypes
   def GenotypeSerialize::serialize list
     list.map { |g| g.serialize }.join("\n")
   end

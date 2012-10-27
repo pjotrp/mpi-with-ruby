@@ -24,10 +24,10 @@ end
 
 VERBOSE = true
 DO_SPLIT = true      # split the input file - to start up quicker
-SPLIT_SIZE = 300
+SPLIT_SIZE = 300     # somewhat arbitrary size
 ANCHOR_PROB_THRESHOLD = 0.5
 FLOAT_PROB_THRESHOLD  = 0.1
-MIN_MESSAGE_SIZE = 0 # set to 0 for all messages
+MIN_MESSAGE_SIZE = 20 # set to 0 for all messages
 MPI_ANY_SOURCE = -1  # from /usr/lib/openmpi/include/mpi.h
 MPI_ANY_TAG    = -1  # from /usr/lib/openmpi/include/mpi.h
 
@@ -77,18 +77,24 @@ def queue_for_haplotype_calling start, middle, stop
 end
 
 def each_haplotype num_processes, pid, individuals, individual
-  $queue.each do | list |
-    result = broadcast_for_haplotype(num_processes, pid, individuals, individual, list)
-    yield result
-  end
+  result = broadcast_for_haplotype(num_processes, pid, individuals, individual, $queue)
+  yield result
   $queue = []
 end
 
 # We broadcast for a range of matching SNPs. The start genotype and the stop genotype
 # are the first and last SNPs. middle contains the ones in the middle.
 #
-def broadcast_for_haplotype num_processes, pid, individuals, individual, list
-  send_msg = GenotypeSerialize::serialize(list)
+def broadcast_for_haplotype num_processes, pid, individuals, individual, queue
+  list = []
+  queue.each do | gs |
+    gs[0..-2].each do | g |
+      list << g
+    end
+  end
+
+  send_msg = GenotypeSerialize::serialize_list(list)
+  p send_msg
 
   results = []
   start = list.first
