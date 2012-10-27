@@ -27,7 +27,7 @@ DO_SPLIT = true      # split the input file - to start up quicker
 SPLIT_SIZE = 300     # somewhat arbitrary size
 ANCHOR_PROB_THRESHOLD = 0.5
 FLOAT_PROB_THRESHOLD  = 0.1
-MIN_MESSAGE_SIZE = 0 # set to 0 for all messages
+MIN_MESSAGE_SIZE = 10 # set to 0 for all messages
 MPI_ANY_SOURCE = -1  # from /usr/lib/openmpi/include/mpi.h
 MPI_ANY_TAG    = -1  # from /usr/lib/openmpi/include/mpi.h
 
