@@ -82,31 +82,35 @@ def handle_responder pid,f,individual,individuals
       exit 0
     end
   else
-    list = GenotypeSerialize::deserialize(msg)
-    current_pos = list.first.pos
-    end_pos = list.last.pos
-    if $snp_cache.size ==0 or end_pos > $snp_cache.last.pos 
-      # continue filling the cache, until we have reached the right section
-      ParseLine::tail_each_genotype(f) do | g |
-        # puts "["+g.to_s+"]"
-        $snp_cache << g
-        if DO_SPLIT
-          break if g.pos >= end_pos
+    result = []
+    list2 = GenotypeSerialize::deserialize_list2(msg)
+    list2.each do |list|
+      current_pos = list.first.pos
+      end_pos = list.last.pos
+      if $snp_cache.size ==0 or end_pos > $snp_cache.last.pos 
+        # continue filling the cache, until we have reached the right section
+        ParseLine::tail_each_genotype(f) do | g |
+          # puts "["+g.to_s+"]"
+          $snp_cache << g
+          if DO_SPLIT
+            break if g.pos >= end_pos
+          end
         end
       end
+      # find first and last item in cache, starting from the tail
+      first = $snp_cache.rindex { |g| g.pos <= current_pos }
+      last  = $snp_cache.rindex { |g| g.pos >= end_pos }
+      if first==nil or last==nil
+        MPI::Comm::WORLD.send("NOMATCH!", source_pid, tag) 
+        return
+      end
+      seq = $snp_cache[first..last]
+      result << match(seq,list)
     end
-    # find first and last item in cache, starting from the tail
-    first = $snp_cache.rindex { |g| g.pos <= current_pos }
-    last  = $snp_cache.rindex { |g| g.pos >= end_pos }
-    if first==nil or last==nil
-      MPI::Comm::WORLD.send("NOMATCH!", source_pid, tag) 
-      return
-    end
-    seq = $snp_cache[first..last]
-    result = match(seq,list)
-    if result.size > 0
+    result2 = result.flatten
+    if result2.size > 0
       print "\nWe have a match!" if VERBOSE
-      send_msg = GenotypeSerialize::serialize(result)
+      send_msg = GenotypeSerialize::serialize(result2)
       MPI::Comm::WORLD.send(send_msg, source_pid, tag) 
     else
       MPI::Comm::WORLD.send("NOMATCH!", source_pid, tag) 

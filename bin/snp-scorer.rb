@@ -88,15 +88,12 @@ end
 # We broadcast for a range of matching SNPs. The start genotype and the stop genotype
 # are the first and last SNPs. middle contains the ones in the middle.
 #
-def broadcast_for_haplotype num_processes, pid, individuals, individual, queue
-  list = queue.flatten.uniq
-  # p ["send",list.map{|g|g.pos}]
-
-  send_msg = GenotypeSerialize::serialize(list)
-  # p ["send",send_msg]
+def broadcast_for_haplotype num_processes, pid, individuals, individual, list
+  send_msg = GenotypeSerialize::serialize_list2(list)
+  p [$pid,"send",send_msg]
 
   results = []
-  start = list.first
+  start = list.first.first
   each_destination do | dest_pid, dest_individual |
     puts "Sending idx #{start.idx} from #{pid} to #{dest_pid} (tag #{dest_individual})" if VERBOSE
     # We use a *blocking* send. After completion we can calculate the new probabilities

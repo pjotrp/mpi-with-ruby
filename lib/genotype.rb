@@ -69,7 +69,18 @@ module GenotypeSerialize
     list.map { |g| g.serialize }.join("\n")
   end
 
+  # List of lists
+  def GenotypeSerialize::serialize_list2 list2
+    list2.map { |list| list.map { |g| g.serialize }.join("\n") }.join(";")
+  end
+
   def GenotypeSerialize::deserialize buf
     buf.split(/\n/).map { |line| g = Genotype.new ; g.deserialize(line.split(/\t/)) }
+  end
+
+  def GenotypeSerialize::deserialize_list2 buf
+    buf.split(";").map {|l| 
+      l.split(/\n/).map { |line| g = Genotype.new ; g.deserialize(line.split(/\t/)) }
+    }
   end
 end
