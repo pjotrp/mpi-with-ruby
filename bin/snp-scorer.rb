@@ -68,13 +68,30 @@ def each_destination
   end
 end
 
+$queue = []
+
+# Adds to the quere, and returns the size of the queue
+def queue_for_haplotype_calling start, middle, stop
+  $queue << [start]+middle+[stop]  
+  $queue.size
+end
+
+def each_haplotype num_processes, pid, individuals, individual
+  $queue.each do | list |
+    result = broadcast_for_haplotype(num_processes, pid, individuals, individual, list)
+    yield result
+  end
+  $queue = []
+end
+
 # We broadcast for a range of matching SNPs. The start genotype and the stop genotype
 # are the first and last SNPs. middle contains the ones in the middle.
 #
-def broadcast_for_haplotype num_processes, pid, individuals, individual, start, middle, stop
-  send_msg = GenotypeSerialize::serialize([start]+middle+[stop])
+def broadcast_for_haplotype num_processes, pid, individuals, individual, list
+  send_msg = GenotypeSerialize::serialize(list)
 
   results = []
+  start = list.first
   each_destination do | dest_pid, dest_individual |
     puts "Sending idx #{start.idx} from #{pid} to #{dest_pid} (tag #{dest_individual})" if VERBOSE
     # We use a *blocking* send. After completion we can calculate the new probabilities
@@ -142,21 +159,21 @@ GenomeSection::each(f,DO_SPLIT,SPLIT_SIZE,ANCHOR_PROB_THRESHOLD) do | genome_sec
       if start and list.size > 0 
         # We have a list of SNPs!
         # p [ pid, start.pos, start.info,list.map { |g| g.info },stop.info ]
-        result = broadcast_for_haplotype(num_processes,pid,individuals,individual,start,list,stop)
-        $message_count += 1
-        # write SNPs to output file
-        outf.print start.pos,"\t",start.nuc,"\t",start.prob,"\tA\n"
-        # list.each do | g |
-        #   outf.print g.pos,"\t",g.nuc,"\t",g.prob,"\tF\n"
-        # end
-        result.each do | g |
-          outf.print g.pos,"\t",g.nuc,"\t",g.prob,"\t!\n"
+        queue_size = queue_for_haplotype_calling(start, list, stop)
+        if queue_size > MIN_MESSAGE_SIZE
+          each_haplotype(num_processes,pid,individuals,individual) do | result |
+            # result = broadcast_for_haplotype(num_processes,pid,individuals,individual,start,list,stop)
+            $message_count += 1
+            # write SNPs to output file
+            outf.print start.pos,"\t",start.nuc,"\t",start.prob,"\tA\n"
+            result.each do | g |
+              outf.print g.pos,"\t",g.nuc,"\t",g.prob,"\t!\n"
+            end
+          end
+          start = stop
+          list = []
+          stop = nil
         end
-        # Don't write stop - it is the next start
-        # restart search from the next probable SNP
-        start = stop
-        list = []
-        stop = nil
       else
         start = stop
         list = []
